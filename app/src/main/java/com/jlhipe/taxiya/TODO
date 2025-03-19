@@ -1,0 +1,4 @@
+- Modelo para usuario con variable boolean esConductor
+- Mover método generateRandomID a su ViewModel
+- ¿Debería poder un conductor pedir un taxi?
+- Una MainScreen distinta para conductores y usuarios

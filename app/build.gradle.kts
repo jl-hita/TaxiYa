@@ -4,16 +4,18 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp) apply true
+    // Add the Google services Gradle plugin
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.jlhipe.taxiya"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.jlhipe.taxiya"
         minSdk = 28
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -67,4 +69,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore)
     ksp(libs.androidx.room.compiler)
+    // Import the Firebase BoM
+    implementation(platform(libs.firebase.bom))
+    // TODO: Add the dependencies for Firebase products you want to use
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation(libs.firebase.analytics)
+    // Add the dependencies for any other desired Firebase products
+    // https://firebase.google.com/docs/android/setup#available-libraries
 }

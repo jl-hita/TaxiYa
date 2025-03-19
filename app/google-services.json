@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "565475598427",
+    "project_id": "taxiya-b3b1a",
+    "storage_bucket": "taxiya-b3b1a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565475598427:android:36f56fb96582e1de725f7e",
+        "android_client_info": {
+          "package_name": "com.jlhipe.taxiya"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCy5HJojswgWoe0ScspiBMHYXivFm17dE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

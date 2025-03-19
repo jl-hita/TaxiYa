@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">TaxiYa</string>
+    <string name="titulo">TaxiYa</string>
+    <string name="goBack">Volver</string>
 </resources>

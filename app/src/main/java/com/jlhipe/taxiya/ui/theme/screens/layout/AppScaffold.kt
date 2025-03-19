@@ -15,10 +15,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AppScaffold(
-    showBackArrow: Boolean = false,
-    onBlackArrowClick: () -> Unit = {},
-    bottomContent: @Composable () -> Unit,
-    content: @Composable () -> Unit
+    showBackArrow: Boolean = false,         // Sirve para indicar si se mostrará o no la flecha atrás
+    onBlackArrowClick: () -> Unit = {},     // Se le pasa la acción de la flecha mediante parámetro
+    bottomContent: @Composable () -> Unit,  // Se le pasa el contenido del campo inferior mediante parámetro
+    content: @Composable () -> Unit         // Se le pasa el contenido principal mediante parámetro
 ) {
     Scaffold(
         topBar = {
