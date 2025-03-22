@@ -2,3 +2,20 @@
 - Mover método generateRandomID a su ViewModel
 - ¿Debería poder un conductor pedir un taxi?
 - Una MainScreen distinta para conductores y usuarios
+
+- SplashScreen -> Comprueba si es primera vez ->
+                    -> Si no es primera vez: Login
+                    -> Si es primera vez: Asigna nueva ID -> Hace escoger entre conductor y usuario ->
+                        -> Si escoge conductor: botón para enviar licencia taxista -> Se activa manualmente por parte de staff
+                        -> Si escoge usuario: Introducir datos
+- MainScreen usuario -> Si no hay petición o ruta en marcha muestra el floatingActionButton para pedir ruta + info de algún tipo + sugerencias destino IA
+                    -> Si hay petición muestra el botón de cancelar y la info del destino + ETA del conductor + ETA al destino + precio estimado (avisará si no hay taxistas activos en un radio de X km)
+                    -> Si va en ruta se muestra el mapa + ETA al destino
+- MainScreen conductor -> Botón para marcarse como ACTIVO o INACTIVO (con popup de confirmación)
+                        -> Si le llega petición de servicio le aparecerá destino, origen, distancia a origen, distancia de origen a destino y botones para aceptar/rechazar
+                        -> Cuando acepte un viaje le aparecerá la navegación hasta el cliente
+                        -> Cuando llegue donde el cliente accionará un botón para indicar que está dentro del vehículo -> Se iniciará la navegación a destino
+                        -> Cuando llegue a destino accionará el botón correspondiente y se le marcará como activo de nuevo para poder recibir servicios
+                        -> Cuando se marque como inactivo aparecerá un resumen de km realizados ese día
+- Screen historial rutas ->
+- Screen nueva petición ruta ->
