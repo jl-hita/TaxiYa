@@ -70,10 +70,22 @@ dependencies {
     implementation(libs.androidx.datastore)
     ksp(libs.androidx.room.compiler)
     // Import the Firebase BoM
-    implementation(platform(libs.firebase.bom))
+    //implementation(platform(libs.firebase.bom))
+    //implementation(platform(libs.firebase.bom.v3280))
+    implementation(platform(libs.firebase.bom.v33110))
     // TODO: Add the dependencies for Firebase products you want to use
     // When using the BoM, don't specify versions in Firebase dependencies
     implementation(libs.firebase.analytics)
     // Add the dependencies for any other desired Firebase products
     // https://firebase.google.com/docs/android/setup#available-libraries
+    // Add the dependency for the Firebase Authentication library
+    implementation(libs.firebase.auth)
+    //implementation(libs.play.services.auth) //Obsoleto
+    //implementation(libs.gms.play.services.auth) //Obsoleto
+    // Add the dependency for the Firebase Authentication library
+    implementation(libs.google.firebase.auth)
+    // Also add the dependencies for the Credential Manager libraries and specify their versions
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 }

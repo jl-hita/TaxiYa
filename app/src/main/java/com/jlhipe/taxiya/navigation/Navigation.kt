@@ -43,6 +43,7 @@ fun Navigation() {
          *              estado aceptado/no, botón cancelar, quizás mapa con ubicación del conductor)                                                                    *** Pantalla de espera a conductor ***
          *          -> El conductor llega al cliente: Muestra datos (ETA, mapa...)                                                                                      *** Pantalla de ruta a destino ***
          *          -> Llega a destino: Muestra resumen con tiempos, distancias...                                                                                      *** Pantalla resumen viaje con datos ***
+         * - Pantalla de opciones en las que poder hacer logout, cambiar datos, etc                                                                                     *** Pantalla de opciones ***
          */
 
         //SplashScreen
