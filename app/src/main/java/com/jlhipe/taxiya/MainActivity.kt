@@ -21,25 +21,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TaxiYaTheme {
+                /*
                 val rutaViewModel by viewModels<RutaViewModel>()
-                Navigation(rutasViewModel)
+                Navigation(rutaViewModel)
+                 */
+                Navigation()
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TaxiYaTheme {
-        Greeting("Android")
     }
 }

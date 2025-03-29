@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,22 +23,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavHostController, rutaViewModel: RutaViewModel) {
+//fun SplashScreen(navController: NavHostController, rutaViewModel: RutaViewModel) {
+fun SplashScreen(navController: NavHostController) {
     Splash()
 
     LaunchedEffect(key1 = true) {
         delay(5000)
         navController.popBackStack() // Avoid going back to Splash Screen
-        navController.navigate(Routes.Splash)   //
+        //navController.navigate(Routes.Login)   //Ruta a la que navegar tras la SplashScreen
     }
 }
 
@@ -59,28 +63,36 @@ fun Splash() {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
+            .background(color = Color(4, 174,236)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        /*
         Text(
             "Task Manager",
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold
         )
+        */
+
         Image(
-            painter = painterResource(id= R.drawable.yo),
-            contentDescription = "Rick Sanchez",
+            painter = painterResource(id= R.drawable.logo),
+            contentDescription = "TaxiYa",
             modifier = Modifier
-                .size(200.dp, 200.dp)
+                .size(250.dp, 166.dp)
+                //.size(200.dp, 133.dp)
                 .alpha(alpha)
+                /*
                 .clip(CircleShape)
                 .border(
                     width = 10.dp,
                     color = MaterialTheme.colorScheme.primary,
                     shape = CircleShape
                 )
+                 */
         )
+        /*
         AnimatedVisibility(visible = greetingVisible) {
             Text(
                 text ="By Rick Sanchez",
@@ -88,5 +100,6 @@ fun Splash() {
                 fontWeight = FontWeight.Bold
             )
         }
+         */
     }
 }

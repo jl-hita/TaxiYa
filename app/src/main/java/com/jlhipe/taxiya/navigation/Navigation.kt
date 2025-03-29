@@ -10,7 +10,8 @@ import androidx.navigation.compose.rememberNavController
 import com.jlhipe.taxiya.ui.screens.SplashScreen
 
 @Composable
-fun Navigation(rutaViewModel: RutaViewModel) {
+//fun Navigation(rutaViewModel: RutaViewModel) {
+fun Navigation() {
     val navController = rememberNavController()
     //val rutasController = remember { RutasController()}
 
@@ -47,6 +48,7 @@ fun Navigation(rutaViewModel: RutaViewModel) {
         //SplashScreen
         composable<Routes.Splash> {
             //SplashScreen(navController, rutaViewModel)
+            SplashScreen(navController)
         }
 
         composable<Routes.Login> {
