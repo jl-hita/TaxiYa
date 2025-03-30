@@ -3,4 +3,8 @@
     <string name="titulo">TaxiYa</string>
     <string name="goBack">Volver</string>
     <string name="default_web_client_id">1:308312830500:android:09a9cb10e3c829c734deb1</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Iniciar sesión</string>
+    <string name="sign_up_description">Crear una cuenta</string>
 </resources>

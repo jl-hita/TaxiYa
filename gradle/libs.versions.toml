@@ -1,10 +1,14 @@
 [versions]
 agp = "8.7.3"
+androidxCredentials = "<latest version>"
 credentialsPlayServicesAuth = "1.5.0"
+credentialsPlayServicesAuthVersion = "<latest version>"
+firebaseAuthKtx = "23.2.0"
 firebaseBom = "33.10.0"
 firebaseBomVersion = "32.8.0"
 googleFirebaseBom = "33.11.0"
 googleid = "1.1.1"
+googleidVersion = "<latest version>"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -24,15 +28,19 @@ coreSplashscreen = "1.0.1"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
+androidx-credentials-credentials-vlatestversion = { module = "androidx.credentials:credentials", version.ref = "androidxCredentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
+androidx-credentials-play-services-auth-vlatestversion = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuthVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-bom-v3280 = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBomVersion" }
 firebase-bom-v33110 = { module = "com.google.firebase:firebase-bom", version.ref = "googleFirebaseBom" }
 gms-play-services-auth = { module = "com.google.android.gms:play-services-auth" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+googleid-vlatestversion = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleidVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

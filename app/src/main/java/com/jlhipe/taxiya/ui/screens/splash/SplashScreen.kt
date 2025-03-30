@@ -1,18 +1,13 @@
-package com.jlhipe.taxiya.ui.screens
+package com.jlhipe.taxiya.ui.screens.splash
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,25 +17,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.jlhipe.taxiya.R
+import com.jlhipe.taxiya.model.service.LoginService
 import com.jlhipe.taxiya.navigation.Routes
+import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 //fun SplashScreen(navController: NavHostController, rutaViewModel: RutaViewModel) {
-fun SplashScreen(navController: NavHostController) {
+fun SplashScreen(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel,
+) {
     Splash()
+
+    var loginService = LoginService()
 
     LaunchedEffect(key1 = true) {
         delay(5000)
         navController.popBackStack() // Avoid going back to Splash Screen
+        if(loginViewModel.hasUser()) navController.navigate(Routes.Main) //Si está logeado va a la página principal
+        else navController.navigate(Routes.Login) //Si no está logeado se le redirige a la pantalla de login
         //navController.navigate(Routes.Login)   //Ruta a la que navegar tras la SplashScreen
     }
 }

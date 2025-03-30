@@ -2,16 +2,19 @@ package com.jlhipe.taxiya.navigation
 
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.jlhipe.taxiya.ui.screens.SplashScreen
+import com.jlhipe.taxiya.ui.screens.splash.SplashScreen
+import com.jlhipe.taxiya.ui.screens.login.LoginScreen
+import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 
 @Composable
 //fun Navigation(rutaViewModel: RutaViewModel) {
-fun Navigation() {
+fun Navigation(loginViewModel: LoginViewModel) {
     val navController = rememberNavController()
     //val rutasController = remember { RutasController()}
 
@@ -27,9 +30,9 @@ fun Navigation() {
          * Pantallas:
          * - Pantalla de login/creación nueva cuenta                                                                                                                    *** Pantalla de login/creación nueva cuenta ***
          * - ¿Nueva cuenta?
-         *  -> SI: Escoge entre conductor y cliente                                                                                                                     *** Pantalla para escoger conductor/cliente***
-         *      -> Conductor: Introduce datos y se muestra email al que enviar documentación. OPCIONAL: Acceso a cámara/archivos para que envie su documentación        *** Pantalla para introducir datos y enviar documentación ***
-         *      -> Cliente: Pantalla en la que introducir sus datos                                                                                                     *** Pantalla para introducir datos cliente ***
+         *  -> SI: Escoge entre conductor y cliente -> Todas las pantallas de crear cuenta se pueden resumir en una sola con booleans que oculten campos                *** Pantalla para crear cuenta nueva ***
+         *      -> Conductor: Introduce datos y se muestra email al que enviar documentación. OPCIONAL: Acceso a cámara/archivos para que envie su documentación        *** Misma pantalla: introducir datos y enviar documentación ***
+         *      -> Cliente: Pantalla en la que introducir sus datos                                                                                                     *** Misma pantalla: introducir datos cliente ***
          *  -> NO: Le lleva a la pantalla que le corresponda (conductor/cliente)
          *       -> Conductor: Pantalla con botón para marcarse como activo / Inactivo. Si le llega petición se dejará de ocultar el botón para aceptarla               *** Pantalla modo espera ***
          *          -> Le llega petición y la acepta: COMPRUEBA QUE LA PETICIÓN SIGUE ACTIVA y va a pantalla con GPS que le lleve al cliente                            *** Pantalla GPS: guía a cliente ***
@@ -44,20 +47,29 @@ fun Navigation() {
          *          -> El conductor llega al cliente: Muestra datos (ETA, mapa...)                                                                                      *** Pantalla de ruta a destino ***
          *          -> Llega a destino: Muestra resumen con tiempos, distancias...                                                                                      *** Pantalla resumen viaje con datos ***
          * - Pantalla de opciones en las que poder hacer logout, cambiar datos, etc                                                                                     *** Pantalla de opciones ***
+         *
+         * WEB:
+         *  - URLs de la política de privacidad y las condiciones del servicio de tu app.
+         *  - Asegúrate de que tu app tenga asignados un nombre, un logotipo y una página principal correctos. Estos valores se presentarán a los usuarios en la pantalla
+         *      de consentimiento de Acceder con Google durante el registro y en la pantalla Apps y servicios de terceros.
          */
 
         //SplashScreen
         composable<Routes.Splash> {
             //SplashScreen(navController, rutaViewModel)
-            SplashScreen(navController)
+            SplashScreen(
+                //modifier = Modifier.background(color = MaterialTheme.colorScheme.background),
+                navController,
+                loginViewModel
+            )
         }
 
         composable<Routes.Login> {
-            //LoginScreen()
+            LoginScreen(navController, loginViewModel)
         }
 
         composable<Routes.Main> {
-            //MainScreen()
+            //MainScreen(navController, loginViewModel)
         }
         /*
         composable<Routes.BookInfo> {
