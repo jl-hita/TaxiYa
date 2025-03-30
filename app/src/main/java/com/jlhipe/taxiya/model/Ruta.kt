@@ -38,6 +38,7 @@ fun generateRandomID(length: Int = 10) : String {
         .map { allowedChars.random() }
         .joinToString("")
 }
+
 /*
  * Para generar el ID, genera un string con alfanuméricos
  *

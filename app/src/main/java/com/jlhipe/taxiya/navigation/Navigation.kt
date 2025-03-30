@@ -11,6 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import com.jlhipe.taxiya.ui.screens.splash.SplashScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
+import com.jlhipe.taxiya.ui.screens.main.MainScreen
+import com.jlhipe.taxiya.ui.screens.registro.RegistroScreen
 
 @Composable
 //fun Navigation(rutaViewModel: RutaViewModel) {
@@ -68,8 +70,12 @@ fun Navigation(loginViewModel: LoginViewModel) {
             LoginScreen(navController, loginViewModel)
         }
 
+        composable<Routes.Registro> {
+            RegistroScreen(navController, loginViewModel)
+        }
+
         composable<Routes.Main> {
-            //MainScreen(navController, loginViewModel)
+            MainScreen(navController, loginViewModel)
         }
         /*
         composable<Routes.BookInfo> {

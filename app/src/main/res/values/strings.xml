@@ -7,4 +7,16 @@
     <string name="password">Password</string>
     <string name="sign_in">Iniciar sesión</string>
     <string name="sign_up_description">Crear una cuenta</string>
+    <string name="esConductorPregunta">¿Te registras como conductor o como usuario?</string>
+    <string name="conductor">Conductor</string>
+    <string name="usuario">Usuario</string>
+    <string name="nombre">Nombre</string>
+    <string name="apellidos">apellidos</string>
+    <string name="logOut">Cerrar sesión</string>
+    <string name="volver">Volver</string>
+    <string name="borrarCuenta">Eliminar cuenta</string>
+    <string name="errorCredenciales">Usuario o contraseña erroneos</string>
+    <string name="emailFormatoIncorrecto">El email tiene un formato incorrecto</string>
+    <string name="passwordMuyCorto">La contraseña es muy corta.\nDebe tener al menos 6 caracteres.</string>
+    <string name="emailYaExiste">Ya existe un usuario con ese email</string>
 </resources>

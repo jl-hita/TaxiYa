@@ -7,12 +7,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,13 +23,20 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextButton
 import androidx.credentials.GetCredentialRequest
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,21 +52,25 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.theme.BlueRibbon
 import com.jlhipe.taxiya.ui.theme.PaleFrost
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    viewModel: LoginViewModel
+    loginViewModel: LoginViewModel
 ) {
-/*
-    PlainLayout(
-        navController
-    ) {
-    }
- */
-    //var viewModel = LoginViewModel()
-    val email = viewModel.email.collectAsState()
-    val password = viewModel.password.collectAsState()
+    //Si está logeado envía a página Main
+    //TODO solucionarlo con un estado boolean que se modifice al hacer login/out/etc
+    //if(loginViewModel.hasUser()) navController.navigate(Routes.Main)
+    //val logeado = loginViewModel.logeado.collectAsState()
+    //var logeado by rememberSaveable { mutableStateOf(loginViewModel.logeado.value) }
+    val logeado: Boolean by loginViewModel.logeado.observeAsState(initial = false)
+    //if(logeado) navController.navigate(Routes.Main)
+    if(logeado) loginViewModel.navegar({ navController.navigate(Routes.Main) })
+
+    val email = loginViewModel.email.collectAsState()
+    val password = loginViewModel.password.collectAsState()
+    val error: String by loginViewModel.error.observeAsState(initial = "")
 
     Column(
         modifier = Modifier
@@ -98,7 +111,7 @@ fun LoginScreen(
             ),
              */
             value = email.value,
-            onValueChange = { viewModel.updateEmail(it) },
+            onValueChange = { loginViewModel.updateEmail(it) },
             placeholder = { Text(stringResource(R.string.email)) },
             leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = "Email") }
         )
@@ -120,19 +133,35 @@ fun LoginScreen(
             ),
              */
             value = password.value,
-            onValueChange = { viewModel.updatePassword(it) },
+            onValueChange = { loginViewModel.updatePassword(it) },
             placeholder = { Text(stringResource(R.string.password)) },
             leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = "Email") },
             visualTransformation = PasswordVisualTransformation()
         )
 
-        Spacer(modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        )
+
+        //Muestra texto con error al iniciar sesión de forma incorrecta
+        if(error != "") {
+            if(error == "The supplied auth credential is incorrect, malformed or has expired.")
+                Text(stringResource(R.string.errorCredenciales))
+            else
+                Text(error)
+        }
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        )
 
         Button(
-            //Si hacemos click en "Login" navega a la página MainScreen
-            onClick = { viewModel.onSignInClick({ navController.navigate(Routes.Main) }) },
+            //Si hacemos click en "Login", después de hacer login navega a la página MainScreen
+            onClick = { loginViewModel.onSignInClick() },
             modifier = Modifier
                 .fillMaxWidth(0.5F)
                 .padding(16.dp, 0.dp)
@@ -147,13 +176,14 @@ fun LoginScreen(
         Spacer(modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp))
-        //Si hacemos click en "Registrar" navega a la página crear usuario
+
+        //Si hacemos click en "Registrar" navega a la página registrar usuario
         Button(
-            onClick = { viewModel.onSignUpClick({ navController.navigate(Routes.Splash) }) },
+            onClick = { navController.navigate(Routes.Registro) },
             modifier = Modifier
                 .fillMaxWidth(0.5F)
                 .padding(16.dp, 0.dp)
-        ) { //TODO cambiar ruta por la página de registro de usuario nuevo
+        ) {
             Text(text = stringResource(R.string.sign_up_description), fontSize = 16.sp)
         }
     }
