@@ -51,14 +51,12 @@ fun RegistroScreen(
     loginViewModel: LoginViewModel
 ) {
     //Si está logeado envía a página Main
-    //TODO solucionarlo con un estado boolean que se modifice al hacer login/out/etc
-    //if(loginViewModel.hasUser()) navController.navigate(Routes.Main)
-    //val logeado = loginViewModel.logeado.collectAsState()
-    //var logeado by rememberSaveable { mutableStateOf(loginViewModel.logeado.value) }
-    //if(logeado) navController.navigate(Routes.Main)
     val logeado: Boolean by loginViewModel.logeado.observeAsState(initial = false)
-    //if(logeado) navController.navigate(Routes.Main)
-    if(logeado) loginViewModel.navegar({ navController.navigate(Routes.Main) })
+    if(logeado) {
+        LaunchedEffect(key1 = true) { loginViewModel.navegar({ navController.navigate(Routes.Main) }) }
+    }
+
+
 
     //true si es conductor, false si es usuario
     var esConductor by rememberSaveable { mutableStateOf(false) }

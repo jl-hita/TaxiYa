@@ -56,17 +56,11 @@ fun MainScreen(
         onBlackArrowClick = { },
         //bottomContent = { BottomBar(modifier = Modifier.padding(vertical = 4.dp), bookViewModel = bookViewModel) }
     ) {
-        //Si no está logeado envía a página Login
-        //TODO solucionarlo con un estado boolean que se modifice al hacer login/out/etc
-        //if(!loginViewModel.hasUser()) navController.navigate(Routes.Login)
-        //var logeado by rememberSaveable { mutableStateOf(loginViewModel.logeado.value) }
-        //val logeado = loginViewModel.logeado.collectAsState()
-        //if(logeado) navController.navigate(Routes.Login)
-        //val logeado = loginViewModel.logeado.collectAsState()
-        //var logeado by rememberSaveable { mutableStateOf(loginViewModel.logeado.value) }
+        //Si hace logout se envía a página Login
         val logeado: Boolean by loginViewModel.logeado.observeAsState(initial = true)
-        //if(!logeado) navController.navigate(Routes.Login)
-        if(!logeado) loginViewModel.navegar({ navController.navigate(Routes.Login) })
+        if(!logeado) {
+            LaunchedEffect(key1 = true) { loginViewModel.navegar({ navController.navigate(Routes.Login) }) }
+        }
 
         Text("currentUserId: " + loginViewModel.currentUserId)
         Text("currentUserName: " + loginViewModel.currentUserName)

@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.jlhipe.taxiya.R
-import com.jlhipe.taxiya.ui.theme.screens.layout.PlainLayout
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.theme.BlueRibbon
@@ -60,13 +59,12 @@ fun LoginScreen(
     loginViewModel: LoginViewModel
 ) {
     //Si está logeado envía a página Main
-    //TODO solucionarlo con un estado boolean que se modifice al hacer login/out/etc
-    //if(loginViewModel.hasUser()) navController.navigate(Routes.Main)
-    //val logeado = loginViewModel.logeado.collectAsState()
-    //var logeado by rememberSaveable { mutableStateOf(loginViewModel.logeado.value) }
     val logeado: Boolean by loginViewModel.logeado.observeAsState(initial = false)
-    //if(logeado) navController.navigate(Routes.Main)
-    if(logeado) loginViewModel.navegar({ navController.navigate(Routes.Main) })
+    if(logeado) {
+        LaunchedEffect(key1 = true) { loginViewModel.navegar({ navController.navigate(Routes.Main) }) }
+    }
+
+
 
     val email = loginViewModel.email.collectAsState()
     val password = loginViewModel.password.collectAsState()

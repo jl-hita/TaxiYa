@@ -65,8 +65,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         get() = callbackFlow {
             val listener =
                 FirebaseAuth.AuthStateListener { auth ->
-                    this.trySend(auth.currentUser.toTaxiYaUser())
-                    //this.trySend(auth.currentUser?.let {User(it.uid) })
+                    this.trySend(auth.currentUser?.let {User(it.uid) })
+                    //this.trySend(auth.currentUser.toTaxiYaUser())
                 }
             Firebase.auth.addAuthStateListener(listener)
             awaitClose { Firebase.auth.removeAuthStateListener(listener) }
@@ -90,13 +90,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun singIn(email: String, password: String) {
         Firebase.auth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
             if(it.isSuccessful) {
-                //_logeado.value = true
-                _logeado.postValue(true)
+                //_logeado.postValue(true)
+                _logeado.value = true
                 _error.postValue("")
             } else {
                 _error.postValue(it.exception!!.message)
                 _password.value = ""
-                //TODO Mostrar mensaje de error (quizás cambiar un boolean que haga el mensaje visible basta)
             }
         }.await()
     }
@@ -105,9 +104,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun signUp(email: String, password: String) {
         Firebase.auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener{
             if(it.isSuccessful) {
-                //_logeado.value = true
-                _logeado.postValue(true)
+                //_logeado.postValue(true)
+                _logeado.value = true
                 _error.postValue("")
+                //TODO enviar email de confirmación
             } else {
                 _error.postValue(it.exception!!.message)
                 _password.value = ""
@@ -119,8 +119,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     /*suspend */fun signOut() {
         Firebase.auth.signOut()
-        //_logeado.value = false
-        _logeado.postValue(false)
+        //_logeado.postValue(false)
+        _logeado.value = false
     }
 
     suspend fun deleteAccount() {
