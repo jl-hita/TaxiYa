@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Para login con google play
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** {
+ *;
+}

@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -79,23 +80,33 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val context = LocalContext.current
+        //Muestra el "login con google"
+        LaunchedEffect(Unit) {
+            launchCredManBottomSheet(context) { result ->
+                loginViewModel.onSignInWithGoogle(result)
+            }
+        }
+
         Image(
             //painter = painterResource(id = R.drawable.logo),
-            painter = painterResource(id = R.drawable.login),
+            painter = painterResource(id = R.drawable.logo_inverso),
             contentDescription = "Auth image",
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp, 4.dp)
         )
 
+        /*
         Spacer(modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp))
+         */
 
         OutlinedTextField(
             singleLine = true,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.8F)
                 .padding(16.dp, 4.dp)
                 .border(
                     BorderStroke(width = 2.dp, color = BlueRibbon),
@@ -111,13 +122,13 @@ fun LoginScreen(
             value = email.value,
             onValueChange = { loginViewModel.updateEmail(it) },
             placeholder = { Text(stringResource(R.string.email)) },
-            leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = "Email") }
+            leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = stringResource(R.string.email)) }
         )
 
         OutlinedTextField(
             singleLine = true,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.8F)
                 .padding(16.dp, 4.dp)
                 .border(
                     BorderStroke(width = 2.dp, color = BlueRibbon),
@@ -133,7 +144,7 @@ fun LoginScreen(
             value = password.value,
             onValueChange = { loginViewModel.updatePassword(it) },
             placeholder = { Text(stringResource(R.string.password)) },
-            leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = "Email") },
+            leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = stringResource(R.string.password)) },
             visualTransformation = PasswordVisualTransformation()
         )
 
@@ -161,7 +172,7 @@ fun LoginScreen(
             //Si hacemos click en "Login", después de hacer login navega a la página MainScreen
             onClick = { loginViewModel.onSignInClick() },
             modifier = Modifier
-                .fillMaxWidth(0.5F)
+                .fillMaxWidth(0.8F)
                 .padding(16.dp, 0.dp)
         ) {
             Text(
@@ -170,7 +181,7 @@ fun LoginScreen(
                 modifier = Modifier.padding(0.dp, 6.dp)
             )
         }
-
+        
         Spacer(modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp))
@@ -179,10 +190,22 @@ fun LoginScreen(
         Button(
             onClick = { navController.navigate(Routes.Registro) },
             modifier = Modifier
-                .fillMaxWidth(0.5F)
+                .fillMaxWidth(0.8F)
                 .padding(16.dp, 0.dp)
         ) {
             Text(text = stringResource(R.string.sign_up_description), fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp))
+
+        AuthenticationButton(
+            modifier = Modifier.fillMaxWidth(0.8F),
+            buttonText = R.string.loginConGoogle,
+            //onRequestResult = { loginViewModel.setLogeado(true) }
+        ) { credential ->
+            loginViewModel.onSignInWithGoogle(credential)
         }
     }
 }

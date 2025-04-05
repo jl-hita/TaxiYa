@@ -2,15 +2,22 @@ package com.jlhipe.taxiya.ui.screens.login
 
 import android.app.Application
 import android.util.Log
+import androidx.credentials.Credential
+import androidx.credentials.CustomCredential
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.User
 import com.jlhipe.taxiya.model.service.LoginService
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -149,6 +156,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         _esConductor.value = esConductor
     }
 
+    fun setLogeado(logeado: Boolean) {
+        _logeado.value = logeado
+    }
+
     fun onSignInClick() {
         //TODO recuperar ciertos campos en la BBDD
         launchCatching {
@@ -211,5 +222,22 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             nombre = this.displayName ?: "",
             isAnonymous = this.isAnonymous
         )
+    }
+
+    fun onSignInWithGoogle(credential: Credential /*, openAndPopUp: (String, String) -> Unit*/) {
+        launchCatching {
+            if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                signInWithGoogle(googleIdTokenCredential.idToken)
+                _logeado.value = true
+            } else {
+                //Log.e(ERROR_TAG, UNEXPECTED_CREDENTIAL)
+            }
+        }
+    }
+
+    suspend fun signInWithGoogle(idToken: String) {
+        val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+        Firebase.auth.signInWithCredential(firebaseCredential).await()
     }
 }

@@ -39,6 +39,7 @@ firebase-bom-v3280 = { module = "com.google.firebase:firebase-bom", version.ref 
 firebase-bom-v33110 = { module = "com.google.firebase:firebase-bom", version.ref = "googleFirebaseBom" }
 gms-play-services-auth = { module = "com.google.android.gms:play-services-auth" }
 google-firebase-auth = { module = "com.google.firebase:firebase-auth" }
+google-googleid = { module = "com.google.android.libraries.identity.googleid:googleid" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 googleid-vlatestversion = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleidVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

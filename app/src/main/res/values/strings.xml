@@ -19,4 +19,5 @@
     <string name="emailFormatoIncorrecto">El email tiene un formato incorrecto</string>
     <string name="passwordMuyCorto">La contraseña es muy corta.\nDebe tener al menos 6 caracteres.</string>
     <string name="emailYaExiste">Ya existe un usuario con ese email</string>
+    <string name="loginConGoogle">Usa tu cuenta google</string>
 </resources>
