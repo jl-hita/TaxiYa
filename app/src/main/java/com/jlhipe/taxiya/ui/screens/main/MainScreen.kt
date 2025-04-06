@@ -1,9 +1,8 @@
 package com.jlhipe.taxiya.ui.screens.main
 
+import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,44 +11,44 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.room.Database
+import com.google.firebase.app
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.jlhipe.taxiya.R
+import com.jlhipe.taxiya.model.Ruta
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
-import com.jlhipe.taxiya.ui.theme.screens.layout.AppTopBar
-import kotlinx.coroutines.delay
 
 @Composable
 fun MainScreen(
     navController: NavController,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    rutaViewModel: RutaViewModel
 ) {
     AppScaffold (
         showBackArrow = false,
@@ -62,9 +61,110 @@ fun MainScreen(
             LaunchedEffect(key1 = true) { loginViewModel.navegar({ navController.navigate(Routes.Login) }) }
         }
 
+
+        /*
         Text("currentUserId: " + loginViewModel.currentUserId)
         Text("currentUserName: " + loginViewModel.currentUserName)
         Text("currentUserEmail: " + loginViewModel.currentUserEmail)
+         */
+        //Log.d("ID", loginViewModel.currentUserId)
+
+
+        //TODO if(user.isConductor = false)
+
+        // Suscripción a la lista de rutas del ViewModel
+        val rutas: List<Ruta> by rutaViewModel.rutas.observeAsState(initial = emptyList())
+        // Suscripción a la variable que indica si se están consiguiendo la lista de libros
+        val isLoadingRutas: Boolean by rutaViewModel.isLoading.observeAsState(initial = false)
+
+        //BBDD Firebase
+        val db: FirebaseFirestore = Firebase.firestore
+        //Lista asociada a los datos de la BBDD
+        val rutasFirebase = remember { mutableStateListOf<Ruta>() }
+
+        db.collection("rutas").get().addOnSuccessListener {
+            rutaViewModel.signalIsLoading()
+            rutasFirebase.removeAll(rutasFirebase)
+            for(document in  it.documents) {
+                //if (document.get("user").toString() == loginViewModel.currentUserId) {
+                    rutasFirebase.add(
+                        Ruta(
+                            conductor = document.get("user").toString(),
+                            cliente = document.get("cliente").toString(),
+                            origenGeo = document.get("origenGeo") as GeoPoint,
+                            destinoGeo = document.get("destinoGeo") as GeoPoint,
+                            momentoSalida = 1742317200,
+                            momentoLlegada = 1742318400,
+                            precio = document.get("precio") as Number,
+                            distancia = document.get("distancia") as Number,
+                            asignado = document.get("asignado") as Boolean,
+                            haciaCliente = document.get("haciaCliente") as Boolean,
+                            haciaDestino = document.get("haciaDestino") as Boolean,
+                            finalizado = document.get("finalizado") as Boolean,
+                        )
+                    )
+                //}
+            }
+            rutaViewModel.signalIsNotLoading()
+        }
+
+        val context = LocalContext.current
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                //.background(MaterialTheme.colorScheme.primary)
+                //.padding(vertical = 8.dp)
+                .padding(8.dp)
+                //.weight(7.7f)
+        ) {
+            item() {
+                Row(){ //Header
+                    Text(stringResource(R.string.origen), fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(10f))
+                    Text(stringResource(R.string.destino), fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(10f))
+                    Text(stringResource(R.string.fecha), fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(10f))
+                    Text(stringResource(R.string.duracion), fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(10f))
+                    //Text(stringResource(R.string.distancia), fontSize = 25.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(10f))
+                }
+            }
+            //items(rutas) { ruta ->
+            items(rutasFirebase) { ruta ->
+
+                if(ruta.visible) {
+                    HorizontalDivider(thickness = 2.dp)
+                    Row() {
+                        Text(rutaViewModel.getNombreCiudad(ruta.origenGeo, context)!!, modifier = Modifier.weight(10f))
+                        Text(rutaViewModel.getNombreCiudad(ruta.destinoGeo, context)!!, modifier = Modifier.weight(10f))
+                        //Text(rutaViewModel.getFechaCompleta(ruta.momentoSalida), modifier = Modifier.weight(10f))
+                        Text(rutaViewModel.getDia(ruta.momentoSalida), modifier = Modifier.weight(10f))
+                        Text(rutaViewModel.getDuracionTiempo(ruta.momentoSalida, ruta.momentoLlegada), modifier = Modifier.weight(10f))
+                        //Text("" + ruta.distancia + " km", modifier = Modifier.weight(10f))
+                    }
+                }
+            }
+        }
+
+        //Mientras carga la lista de rutas se muestra un mensaje y una linea de progreso
+        if (isLoadingRutas) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+                Text(
+                    text = stringResource(R.string.cargando),
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
 
         //TODO Pasar botón de logOut a un menú en el AppTopBar
         Button(

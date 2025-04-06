@@ -20,4 +20,11 @@
     <string name="passwordMuyCorto">La contraseña es muy corta.\nDebe tener al menos 6 caracteres.</string>
     <string name="emailYaExiste">Ya existe un usuario con ese email</string>
     <string name="loginConGoogle">Usa tu cuenta google</string>
+    <string name="origen">Origen</string>
+    <string name="destino">destino</string>
+    <string name="horaSalida">hora de salida</string>
+    <string name="fecha">fecha</string>
+    <string name="cargando">Cargando...</string>
+    <string name="duracion">duración</string>
+    <string name="distancia">distancia</string>
 </resources>

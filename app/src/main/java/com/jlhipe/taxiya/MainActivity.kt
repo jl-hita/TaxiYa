@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.jlhipe.taxiya.navigation.Navigation
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
+import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.theme.TaxiYaTheme
 
 class MainActivity : ComponentActivity() {
@@ -16,11 +17,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             TaxiYaTheme {
                 val loginViewModel by viewModels<LoginViewModel>()
+                val rutaViewModel by viewModels<RutaViewModel>()
                 /*
                 val rutaViewModel by viewModels<RutaViewModel>()
                 Navigation(rutaViewModel)
                  */
-                Navigation(loginViewModel)
+                Navigation(loginViewModel, rutaViewModel)
             }
         }
     }

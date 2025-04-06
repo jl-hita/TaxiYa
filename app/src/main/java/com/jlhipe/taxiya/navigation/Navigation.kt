@@ -2,8 +2,6 @@ package com.jlhipe.taxiya.navigation
 
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,11 +10,12 @@ import com.jlhipe.taxiya.ui.screens.splash.SplashScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.MainScreen
+import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.screens.registro.RegistroScreen
 
 @Composable
 //fun Navigation(rutaViewModel: RutaViewModel) {
-fun Navigation(loginViewModel: LoginViewModel) {
+fun Navigation(loginViewModel: LoginViewModel, rutaViewModel: RutaViewModel) {
     val navController = rememberNavController()
     //val rutasController = remember { RutasController()}
 
@@ -75,8 +74,9 @@ fun Navigation(loginViewModel: LoginViewModel) {
         }
 
         composable<Routes.Main> {
-            MainScreen(navController, loginViewModel)
+            MainScreen(navController, loginViewModel, rutaViewModel)
         }
+
         /*
         composable<Routes.BookInfo> {
             BookInfoScreen(

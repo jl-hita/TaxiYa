@@ -35,14 +35,16 @@ fun AppScaffold(
                 onClickBlackArrow = onBlackArrowClick,
             )
         },
+        //bottomBar = bottomContent
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .padding(paddingValues)
+                .padding(paddingValues),
+                //.background(color = MaterialTheme.colorScheme.secondary),
                 //.background(color = PaleFrost)
-                .verticalScroll(rememberScrollState()),
+                //.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
