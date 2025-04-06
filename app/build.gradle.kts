@@ -87,4 +87,6 @@ dependencies {
     implementation(libs.google.googleid)
     //BBDD Firebase
     implementation(libs.firebase.firestore)
+    //Para tener GMS
+    //implementation (libs.play.services)
 }

@@ -1,12 +1,9 @@
 package com.jlhipe.taxiya.model
 
-import android.location.Geocoder
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
-import java.util.Date
 
-data class Ruta (
-    var identificador: String = "", //Identificador único: se genera y se comprueba que no exista
+data class Ruta(
+    var userId: String = "", //Identificador único: se genera y se comprueba que no exista
     var conductor: String = "", //ID única del conductor, no mostrar en UI
     var cliente: String = "",   //ID única del cliente, no mostrar en UI
     var origen: String = "",    //Dirección con el formato texto normal
@@ -26,10 +23,14 @@ data class Ruta (
     var haciaDestino: Boolean = false,    //¿Está el usuario en el taxi en ruta?
     var finalizado: Boolean = false,    //¿Ha finalizado la ruta?
     var visible: Boolean = true,
-){
-    /*
-     * Para tener datos de prueba para la UI
-     */
+)
+/*
+{
+
+
+     //Para tener datos de prueba para la UI
+
+
     companion object {
         var listaRutas: MutableList<Ruta> = ArrayList()
 
@@ -139,7 +140,8 @@ data class Ruta (
     */
 }
 
-    fun generateRandomID(length: Int = 10) : String {
+//Para generar el ID, genera un string con alfanuméricos
+fun generateRandomID(length: Int = 10) : String {
     val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
     return (1..length)
         .map { allowedChars.random() }
