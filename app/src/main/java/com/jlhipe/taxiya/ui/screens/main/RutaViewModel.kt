@@ -3,14 +3,25 @@ package com.jlhipe.taxiya.ui.screens.main
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.location.Geocoder
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.jlhipe.taxiya.model.Ruta
 import kotlinx.coroutines.Dispatchers
@@ -35,9 +46,27 @@ class RutaViewModel: ViewModel() {
     //BBDD Firebase
     private val db: FirebaseFirestore = Firebase.firestore
 
+    val userId: String
+        get() = Firebase.auth.currentUser?.uid.orEmpty()
+/*
+    //Variables para localizar por GPS
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+*/
+
+    //Variable para manejar permisos
+    val visiblePermissionDialogeQueue = mutableStateListOf<String>()
+
     init {
         loadRutas()
     }
+
+    /*
+    fun setUserId(userId: String) {
+        this.userId = userId
+    }
+    */
 
     //Carga la lista de rutas
     fun loadRutas() {
@@ -57,22 +86,27 @@ class RutaViewModel: ViewModel() {
             //_isLoading.postValue(true)
             //rutasFirebase.removeAll(rutasFirebase)
             for(document in  it.documents) {
-                listaRutas.add(
-                    Ruta(
-                        conductor = document.get("user").toString(),
-                        cliente = document.get("cliente").toString(),
-                        origenGeo = document.get("origenGeo") as GeoPoint,
-                        destinoGeo = document.get("destinoGeo") as GeoPoint,
-                        momentoSalida = 1742317200,
-                        momentoLlegada = 1742318400,
-                        precio = document.get("precio") as Number,
-                        distancia = document.get("distancia") as Number,
-                        asignado = document.get("asignado") as Boolean,
-                        haciaCliente = document.get("haciaCliente") as Boolean,
-                        haciaDestino = document.get("haciaDestino") as Boolean,
-                        finalizado = document.get("finalizado") as Boolean,
+                //if(document.get("userId") == this.userId) { //Alternativa: comprobar si coincide con el campo cliente o conductor
+                //Cargamos solo las rutas en las que el usuario sea el conductor o el cliente
+                if(document.get("cliente") == this.userId || document.get("conductor") == this.userId) {
+                    listaRutas.add(
+                        //document.toObject<Ruta>()!!
+                        Ruta(
+                            conductor = document.get("conductor").toString(),
+                            cliente = document.get("cliente").toString(),
+                            origenGeo = document.get("origenGeo") as GeoPoint,
+                            destinoGeo = document.get("destinoGeo") as GeoPoint,
+                            momentoSalida = 1742317200,
+                            momentoLlegada = 1742318400,
+                            precio = document.get("precio") as Number,
+                            distancia = document.get("distancia") as Number,
+                            asignado = document.get("asignado") as Boolean,
+                            haciaCliente = document.get("haciaCliente") as Boolean,
+                            haciaDestino = document.get("haciaDestino") as Boolean,
+                            finalizado = document.get("finalizado") as Boolean,
+                        )
                     )
-                )
+                }
             }
             //_isLoading.postValue(false)
         }
@@ -81,7 +115,7 @@ class RutaViewModel: ViewModel() {
 
     //Inserta ruta en Cloud Firestore y devuelve un string con la ID del document
     fun insertaRutaFirebase(
-        userID: String,
+        //userID: String,
         //identificador: String,
         cliente: String, // = "5vUgPOL0a4SijzsA9Zjxx92aAbU2",
         conductor: String, // = "1qw6g1r8ge",
@@ -105,31 +139,8 @@ class RutaViewModel: ViewModel() {
     ): String {
         //Variable que guardará la ID del document
         var documentID: String = ""
-        //Creamos hashMap de la Ruta
-        /*
-        val ruta = hashMapOf(
-            "cliente" to cliente,
-            "conductor" to conductor,
-            "origen" to origen,
-            "destino" to destino,
-            "origenGeo" to origenGeo,
-            //"origenGeoLat" to origenGeoLat,
-            //"origenGeoLon" to origenGeoLon,
-            "destinoGeo" to destinoGeo,
-            //"destinoGeoLat" to destinoGeoLat,
-            //"destinoGeoLon" to destinoGeoLon,
-            "momentoSalida" to momentoSalida,
-            "momentoLlegada" to momentoLlegada,
-            "precio" to precio,
-            "distancia" to distancia,
-            "asignado" to asignado,
-            "haciaCliente" to haciaCliente,
-            "haciaDestino" to haciaDestino,
-            "finalizado" to finalizado
-        )
-         */
+
         val ruta = Ruta(
-            userId = userID,
             cliente = cliente,
             conductor = conductor,
             origen = origen,
@@ -157,9 +168,69 @@ class RutaViewModel: ViewModel() {
                 Log.w(TAG, "Error adding document", e)
             }
 
+        //Devolvemos la ID del documento para casos en los que debamos editar la ruta después de crearla
         return documentID
-        //Recargamos la lista de rutas
-        //loadRutas()
+    }
+
+    fun getRuta(documentId: String): Ruta {
+        var ruta = Ruta()
+
+        db.collection("rutas").document(documentId).get().addOnSuccessListener { document ->
+            ruta = Ruta(
+                conductor = document.get("conductor").toString(),
+                cliente = document.get("cliente").toString(),
+                origenGeo = document.get("origenGeo") as GeoPoint,
+                destinoGeo = document.get("destinoGeo") as GeoPoint,
+                momentoSalida = document.get("momentoSalida") as Long,
+                momentoLlegada = document.get("momentoLlegada") as Long,
+                precio = document.get("precio") as Number,
+                distancia = document.get("distancia") as Number,
+                asignado = document.get("asignado") as Boolean,
+                haciaCliente = document.get("haciaCliente") as Boolean,
+                haciaDestino = document.get("haciaDestino") as Boolean,
+                finalizado = document.get("finalizado") as Boolean,
+            )
+        }
+
+        return ruta
+    }
+
+    fun updateRuta(documentId: String, ruta: Ruta) {
+        db.collection("rutas").document(documentId).set(ruta)
+    }
+
+    //Asigna un conductor a una ruta
+    fun setAsignado(documentId: String, conductor: String) {
+        var rutaTemp = getRuta(documentId)
+        rutaTemp.conductor = conductor
+        rutaTemp.asignado = true
+        rutaTemp.haciaCliente = false
+        rutaTemp.haciaDestino = false
+        rutaTemp.finalizado = false
+        updateRuta(documentId, rutaTemp)
+    }
+
+    //El conductor incia ruta hacia el cliente
+    fun setHaciaCliente(documentId: String) {
+        var rutaTemp = getRuta(documentId)
+        rutaTemp.haciaCliente = true
+        updateRuta(documentId, rutaTemp)
+    }
+
+    //El conductor inicia la ruta hacia el destino
+    fun setHaciaDestino(documentId: String) {
+        var rutaTemp = getRuta(documentId)
+        rutaTemp.haciaCliente = false
+        rutaTemp.haciaDestino = true
+        updateRuta(documentId, rutaTemp)
+    }
+
+    //Marca la ruta como finalizada
+    fun setFinalizado(documentId: String) {
+        var rutaTemp = getRuta(documentId)
+        rutaTemp.haciaDestino = false
+        rutaTemp.finalizado = true
+        updateRuta(documentId, rutaTemp)
     }
 
     fun signalIsLoading() {
@@ -247,4 +318,24 @@ class RutaViewModel: ViewModel() {
         else
             return "" + minutos + "m "// + segundos + "s"
     }
+
+
+    //Para obtener actualizaciones de la ubicación mediante GPS
+
+    /*
+     * Manejamos permisos
+     */
+    fun dismissDialog() {
+        visiblePermissionDialogeQueue.removeAt(visiblePermissionDialogeQueue.lastIndex)
+    }
+
+    fun onPermissionResult(
+        permission: String,
+        isGranted: Boolean
+    ) {
+        if(!isGranted) {
+            visiblePermissionDialogeQueue.add(0, permission)
+        }
+    }
+
 }

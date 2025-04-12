@@ -3,19 +3,14 @@ package com.jlhipe.taxiya.model
 import com.google.firebase.firestore.GeoPoint
 
 data class Ruta(
-    var userId: String = "", //Identificador único: se genera y se comprueba que no exista
     var conductor: String = "", //ID única del conductor, no mostrar en UI
     var cliente: String = "",   //ID única del cliente, no mostrar en UI
     var origen: String = "",    //Dirección con el formato texto normal
     var destino: String = "",   //Dirección con el formato texto normal
-    var origenGeo: GeoPoint,    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
-    var destinoGeo: GeoPoint,    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
-    //val origenCoord: String = "",    //Dirección con el formato coordenadas
-    //val destinoCoord: String = "",   //Dirección con el formato coordenadas
-    //val dia: Date,     //Día que se inició la ruta
-    //val dia: String = "",     //Día que se inició la ruta con formato aaaa/mm/dd
-    var momentoSalida: Long,   //Para indicar día y hora de la ruta, segundos desde 1970-01-01 hasta el momento
-    var momentoLlegada: Long,
+    var origenGeo: GeoPoint = GeoPoint(0.0,0.0),    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
+    var destinoGeo: GeoPoint = GeoPoint(0.0, 0.0),    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
+    var momentoSalida: Long = 1,   //Para indicar día y hora de la ruta, segundos desde 1970-01-01 hasta el momento
+    var momentoLlegada: Long = 1,
     var precio: Number = 0,    //Precio en céntimos de euro
     var distancia: Number = 0.0,    //Distancia en km con un decimal
     var asignado:  Boolean = false,    //¿Está la ruta asignada a un taxista?
@@ -23,7 +18,8 @@ data class Ruta(
     var haciaDestino: Boolean = false,    //¿Está el usuario en el taxi en ruta?
     var finalizado: Boolean = false,    //¿Ha finalizado la ruta?
     var visible: Boolean = true,
-)
+) {
+}
 /*
 {
 

@@ -40,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -54,6 +55,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -70,7 +72,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore)
     ksp(libs.androidx.room.compiler)
-
     // Import the Firebase BoM
     implementation(platform(libs.firebase.bom.v33110))
     // When using the BoM, don't specify versions in Firebase dependencies
@@ -87,6 +88,9 @@ dependencies {
     implementation(libs.google.googleid)
     //BBDD Firebase
     implementation(libs.firebase.firestore)
-    //Para tener GMS
-    //implementation (libs.play.services)
+    // Maps SDK for Android
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
+    // Para permisos en runtime
+    //mplementation(libs.accompanist.permissions)
 }

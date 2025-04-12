@@ -14,4 +14,7 @@ class Routes {
 
     @Serializable
     object Main
+
+    @Serializable
+    object NuevaRuta
 }

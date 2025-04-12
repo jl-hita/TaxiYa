@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.jlhipe.taxiya.ui.screens.nuevaruta.NuevaRuta
 import com.jlhipe.taxiya.ui.screens.splash.SplashScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
@@ -75,6 +76,10 @@ fun Navigation(loginViewModel: LoginViewModel, rutaViewModel: RutaViewModel) {
 
         composable<Routes.Main> {
             MainScreen(navController, loginViewModel, rutaViewModel)
+        }
+
+        composable<Routes.NuevaRuta> {
+            NuevaRuta(navController, loginViewModel, rutaViewModel)
         }
 
         /*

@@ -1,4 +1,5 @@
 <resources>
+    <string name="apimakey">AIzaSyA8LBmRK7QSFSrXYSHVkFOOB_6br6rADAM</string>
     <string name="app_name">TaxiYa</string>
     <string name="titulo">TaxiYa</string>
     <string name="goBack">Volver</string>
@@ -27,4 +28,8 @@
     <string name="cargando">Cargando...</string>
     <string name="duracion">duración</string>
     <string name="distancia">distancia</string>
+    <string name="nuevaRuta">Nueva ruta</string>
+    <string name="ok">Ok</string>
+    <string name="aceptar">Aceptar</string>
+    <string name="darPermiso">Dar permiso</string>
 </resources>

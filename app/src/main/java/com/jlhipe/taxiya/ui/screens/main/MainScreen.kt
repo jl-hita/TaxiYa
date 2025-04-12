@@ -43,6 +43,11 @@ fun MainScreen(
     AppScaffold (
         showBackArrow = false,
         onBlackArrowClick = { },
+        //botonAccion = navController.navigate(Routes.NuevaRuta)
+        showActionButton = true, //TODO cambiar por un check si usuario es conductor
+        botonAccion = {
+            navController.navigate(Routes.NuevaRuta);
+        },
         //bottomContent = { BottomBar(modifier = Modifier.padding(vertical = 4.dp), bookViewModel = bookViewModel) }
     ) {
         //Si hace logout se envía a página Login
@@ -50,7 +55,6 @@ fun MainScreen(
         if(!logeado) {
             LaunchedEffect(key1 = true) { loginViewModel.navegar({ navController.navigate(Routes.Login) }) }
         }
-
 
         /*
         Text("currentUserId: " + loginViewModel.currentUserId)
@@ -128,7 +132,7 @@ fun MainScreen(
         //TODO Borrame - botón para insertar una ruta de prueba en firebase
         Button(
             onClick = { rutaViewModel.insertaRutaFirebase(
-                userID = loginViewModel.currentUserId,
+                //userID = loginViewModel.currentUserId,
                 //identificador = loginViewModel.currentUserId,
                 cliente = loginViewModel.currentUserId,
                 conductor = "1qw6g1r8ge"

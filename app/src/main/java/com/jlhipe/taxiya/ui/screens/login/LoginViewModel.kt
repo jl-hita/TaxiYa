@@ -20,6 +20,7 @@ import com.google.firebase.ktx.Firebase
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.User
 import com.jlhipe.taxiya.model.service.LoginService
+import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
@@ -64,6 +65,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     private var _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
+
+    var _userId: String = ""
 
     /*
      * TODO INICIO SACADOS DE LoginService
@@ -224,7 +227,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun onSignInWithGoogle(credential: Credential /*, openAndPopUp: (String, String) -> Unit*/) {
+    fun onSignInWithGoogle(credential: Credential) {
         launchCatching {
             if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)

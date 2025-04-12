@@ -11,13 +11,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jlhipe.taxiya.R
 
@@ -26,6 +31,8 @@ fun AppScaffold(
     showBackArrow: Boolean = false,         // Sirve para indicar si se mostrará o no la flecha atrás
     onBlackArrowClick: () -> Unit = {},     // Se le pasa la acción de la flecha mediante parámetro
     //bottomContent: @Composable () -> Unit,  // Se le pasa el contenido del campo inferior mediante parámetro
+    showActionButton: Boolean = false,
+    botonAccion: () -> Unit = {},  //Botón de acción (nueva ruta)
     content: @Composable () -> Unit         // Se le pasa el contenido principal mediante parámetro
 ) {
     Scaffold(
@@ -34,6 +41,15 @@ fun AppScaffold(
                 showBackArrow = showBackArrow,
                 onClickBlackArrow = onBlackArrowClick,
             )
+        },
+        floatingActionButton = {
+            if(showActionButton) {
+                Button(
+                    onClick = botonAccion
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.nuevaRuta))
+                }
+            }
         },
         //bottomBar = bottomContent
     ) { paddingValues ->
