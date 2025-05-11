@@ -13,6 +13,7 @@ import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.theme.TaxiYaTheme
 import android.Manifest
 import android.content.pm.PackageManager
+import com.jlhipe.taxiya.ui.screens.nuevaruta.LocalizacionViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +39,8 @@ class MainActivity : ComponentActivity() {
             TaxiYaTheme {
                 val loginViewModel by viewModels<LoginViewModel>()
                 val rutaViewModel by viewModels<RutaViewModel>()
-                Navigation(loginViewModel, rutaViewModel)
+                val localizacionViewModel: LocalizacionViewModel by viewModels()
+                Navigation(loginViewModel, rutaViewModel, localizacionViewModel)
             }
         }
     }

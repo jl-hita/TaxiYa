@@ -1,12 +1,17 @@
 package com.jlhipe.taxiya.ui.screens.main
 
+import android.Manifest
+import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -319,23 +324,6 @@ class RutaViewModel: ViewModel() {
             return "" + minutos + "m "// + segundos + "s"
     }
 
-
     //Para obtener actualizaciones de la ubicación mediante GPS
-
-    /*
-     * Manejamos permisos
-     */
-    fun dismissDialog() {
-        visiblePermissionDialogeQueue.removeAt(visiblePermissionDialogeQueue.lastIndex)
-    }
-
-    fun onPermissionResult(
-        permission: String,
-        isGranted: Boolean
-    ) {
-        if(!isGranted) {
-            visiblePermissionDialogeQueue.add(0, permission)
-        }
-    }
 
 }

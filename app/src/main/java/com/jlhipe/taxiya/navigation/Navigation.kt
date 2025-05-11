@@ -1,5 +1,7 @@
 package com.jlhipe.taxiya.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
@@ -12,11 +14,17 @@ import com.jlhipe.taxiya.ui.screens.login.LoginScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.MainScreen
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
+import com.jlhipe.taxiya.ui.screens.nuevaruta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.registro.RegistroScreen
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 //fun Navigation(rutaViewModel: RutaViewModel) {
-fun Navigation(loginViewModel: LoginViewModel, rutaViewModel: RutaViewModel) {
+fun Navigation(
+    loginViewModel: LoginViewModel,
+    rutaViewModel: RutaViewModel,
+    localizacionViewModel: LocalizacionViewModel
+) {
     val navController = rememberNavController()
     //val rutasController = remember { RutasController()}
 
@@ -79,7 +87,7 @@ fun Navigation(loginViewModel: LoginViewModel, rutaViewModel: RutaViewModel) {
         }
 
         composable<Routes.NuevaRuta> {
-            NuevaRuta(navController, loginViewModel, rutaViewModel)
+            NuevaRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
         }
 
         /*

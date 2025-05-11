@@ -1,171 +1,124 @@
 package com.jlhipe.taxiya.ui.screens.nuevaruta
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.fillMaxSize
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
+import com.jlhipe.taxiya.ui.theme.screens.layout.Mapa
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import com.jlhipe.taxiya.ui.theme.screens.layout.Mapa
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.maps.android.compose.CameraPositionState
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.Marker
 import com.jlhipe.taxiya.R
-import android.Manifest
-import android.app.Activity
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.LocalActivity
-import androidx.annotation.RequiresApi
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
-import com.google.api.Context
+import com.jlhipe.taxiya.navigation.Routes
+import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
 
-@RequiresApi(Build.VERSION_CODES.Q)
+
+@SuppressLint("MissingPermission")
 @Composable
 fun NuevaRuta(
     navController: NavController,
     loginViewModel: LoginViewModel,
-    rutaViewModel: RutaViewModel
+    rutaViewModel: RutaViewModel,
+    localizacionViewModel: LocalizacionViewModel
 ) {
-    /*
-    val dialogQueue = rutaViewModel.visiblePermissionDialogeQueue
-    val ACCESS_FINE_LOCATIONPermissionResultLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = {
-            isGranted ->
-            rutaViewModel.onPermissionResult(
-                permission = Manifest.permission.ACCESS_FINE_LOCATION,
-                isGranted = isGranted
-            )
-        }
-    )
+    //string dirección destino
+    val destinoInput by localizacionViewModel.destino.observeAsState(initial = "")
+    val destinoLocation = remember{ mutableStateOf((LatLng(localizacionViewModel.destinoLocation.value?.get(0)?.latitude!!, localizacionViewModel.destinoLocation.value?.get(0)?.longitude!!)))}
 
-    val ACCESS_COARSE_LOCATIONPermissionResultLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = {
-                isGranted ->
-            rutaViewModel.onPermissionResult(
-                permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                isGranted = isGranted
-            )
-        }
-    )
+    //Ubicación del user
+    val userLocation = remember{ mutableStateOf((LatLng(localizacionViewModel.ubicacion.value?.get(0)?.latitude!!, localizacionViewModel.ubicacion.value?.get(0)?.longitude!!)))}
+    //TODO Hacer que en el init se obtenga la ubicación, ahora mismo es 0,0
+    //val userLocation by localizacionViewModel.ubicacion.observeAsState()
 
-    val permisos = arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+    //Estado posición cámara
+    var cameraPositionState = rememberCameraPositionState{ position = CameraPosition.fromLatLngZoom(userLocation.value, 10f) }
 
-    if (ActivityCompat.checkSelfPermission(
-            LocalContext.current,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-            LocalContext.current,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED
+    AppScaffold (
+        showBackArrow = true,
+        onBlackArrowClick = { navController.popBackStack() },
+        //botonAccion = navController.navigate(Routes.NuevaRuta)
+        showActionButton = true, //TODO cambiar por un check si usuario es conductor
+        botonAccion = {
+            navController.navigate(Routes.NuevaRuta);
+        },
+        //bottomContent = { BottomBar(modifier = Modifier.padding(vertical = 4.dp), bookViewModel = bookViewModel) }
     ) {
-        ActivityCompat.requestPermissions(
-            LocalActivity.current as Activity,
-            permisos,
+        if (localizacionViewModel.tienePermisosGPS()) {
+            //Mapa(localizacionViewModel)
 
-        )
-        // TODO: Consider calling
-        //    ActivityCompat#requestPermissions
-        // here to request the missing permissions, and then overriding
-        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-        //                                          int[] grantResults)
-        // to handle the case where the user grants the permission. See the documentation
-        // for ActivityCompat#requestPermissions for more details.
-        return
-    }
-     */
-    Mapa()
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                /*
+                Text(
+                    stringResource(R.string.escogeDestino),
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                 */
+                var newLocation : LatLng
 
-    /*
-    if(ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-        ACCESS_FINE_LOCATIONPermissionResultLauncher.launch(
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    } else if (ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-        ACCESS_COARSE_LOCATIONPermissionResultLauncher.launch(
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-    } else {
-        Mapa()
-    }
-    */
+                TextField(value = destinoInput,
+                    onValueChange = {
+                        //Guarda el nombre de calle
+                        localizacionViewModel.setDestinoInput(it)
+                        //Convierte de nombre de calle a coordenadas
+                        localizacionViewModel.requestCoordsFromAdress(it)
+                        //TODO Establece la cámara del mapa
+                        //newLocation = (LatLng(destinoLocation.value.latitude,destinoLocation.value.longitude)) <- Quizás cambiar por userLocation
+                        //onLocationSelected(newLocation)
+                    },
+                    label = { Text(text = stringResource(R.string.escogeDestino)) }
+                )
 
-}
-/*
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PermissionDialog(
-    permission: String,
-    isPermanentlyDeclined: Boolean,
-    onDismiss: () -> Unit,
-    onOkClick: () -> Unit,
-    onGoToAppSettingsClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    BasicAlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = modifier,
-    ) {
-        Column() {
-            Text(
-                text = when(permission) {
-                    //Manifest.permission.ACCESS_COARSE_LOCATION -> {
-                    Manifest.permission.ACCESS_FINE_LOCATION
+                Button(onClick = {
+                    //TODO establece destino y busca conductor libre
+                    //TODO cambia estado de la ruta
+                    //TODO Guarda la ruta en firebase
+                }) {
+                    Text(text = stringResource(R.string.buscaTaxiLibre))
                 }
-            )
 
-            Spacer(modifier = Modifier.height(15.dp))
-
-            Text(
-                text = if(isPermanentlyDeclined) {
-                    stringResource(R.string.darPermiso)
-                } else {
-                    stringResource(R.string.ok)
-                },
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-                    .clickable {
-                        if(isPermanentlyDeclined) {
-                            onGoToAppSettingsClick()
-                        } else {
-                            onOkClick()
-                        }
-                    }.padding(16.dp)
-            )
+                GoogleMap(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(16.dp),
+                    cameraPositionState = cameraPositionState,
+                    onMapClick = {
+                        userLocation.value = it
+                    }
+                ) {
+                    //Marker(state = MarkerState(userLocation.value))
+                    Marker(position = userLocation.value)
+                }
+            }
+        } else {
+            Text(stringResource(R.string.necesitaPermisos))
         }
     }
 }
-*/

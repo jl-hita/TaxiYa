@@ -32,4 +32,10 @@
     <string name="ok">Ok</string>
     <string name="aceptar">Aceptar</string>
     <string name="darPermiso">Dar permiso</string>
+    <string name="necesitaPermisos">Esta aplicación necesita permisos de ubicación para funcionar correctamente</string>
+    <string name="yo">Yo</string>
+    <string name="miPosicion">Mi posición</string>
+    <string name="escogeDestino">Escoge destino</string>
+    <string name="buscaTaxiLibre">Busca taxi libre</string>
+    <string name="direccionNoEncontrada">Dirección no encontrada</string>
 </resources>

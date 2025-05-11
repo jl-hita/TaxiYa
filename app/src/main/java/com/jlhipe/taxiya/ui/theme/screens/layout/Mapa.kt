@@ -18,13 +18,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -32,7 +35,13 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.firebase.firestore.GeoPoint
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.jlhipe.taxiya.R
+import com.jlhipe.taxiya.model.Ruta
+import com.jlhipe.taxiya.ui.screens.nuevaruta.LocalizacionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -42,7 +51,14 @@ import kotlinx.coroutines.tasks.await
 )
 @SuppressLint("MissingPermission")
 @Composable
-fun Mapa() {
+fun Mapa(
+    localizacionViewModel: LocalizacionViewModel
+) {
+    
+
+
+}
+    /*
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val locationClient = remember {
@@ -53,20 +69,65 @@ fun Mapa() {
     }
     val usePreciseLocation = true
 
-    var ubicacion: LatLng by remember { mutableStateOf(LatLng(0.0, 0.0)) }
+    //val ubicacion: LatLng by localizacionViewModel.ubicacion.observeAsState()
+    val ubicacion: List<LatLng> by localizacionViewModel.ubicacion.observeAsState(initial = emptyList())
+    val latitud: Double by localizacionViewModel.latitud.observeAsState(0.0)
+    val longitud: Double by localizacionViewModel.longitud.observeAsState(0.0)
+
+    //var ubicacion: LatLng by remember { mutableStateOf(LatLng(latitud, longitud)) }
+
+
     val singapore = LatLng(1.35, 103.87)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(ubicacion, 10f)
+        position = CameraPosition.fromLatLngZoom(ubicacion.firstOrNull()!!, 10f)
     }
 
+    //Seguimos la ubicación del dispositivo para pasarlo al mapa
+    LaunchedEffect(key1 = true) {
+        scope.launch(Dispatchers.IO) {
+            val priority = if (usePreciseLocation) {
+                Priority.PRIORITY_HIGH_ACCURACY
+            } else {
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY
+            }
+            val result = locationClient.getCurrentLocation(
+                priority,
+                CancellationTokenSource().token,
+            ).await()
+            result?.let { fetchedLocation ->
+                //TODO no se puede invocar setValue en un background thread
+                localizacionViewModel.setUbicacion(fetchedLocation.latitude, fetchedLocation.longitude)
+            }
+        }
+    }
+
+
     AppScaffold() {
-        //Mapa(modifier = Modifier.fillMaxSize())
+        /*
         GoogleMap(
             modifier = Modifier.fillMaxHeight(0.5F),
         ) {
 
         }
+         */
 
+        GoogleMap(
+            modifier = Modifier.fillMaxHeight(0.8F),
+            //cameraPositionState = cameraState,
+            properties = MapProperties(
+                isMyLocationEnabled = true,
+                mapType = MapType.NORMAL,
+                isTrafficEnabled = true
+            )
+        ) {
+            Marker(
+                title = stringResource(R.string.yo),
+                snippet = stringResource(R.string.miPosicion),
+                draggable = true,
+                position = ubicacion.firstOrNull()!!
+            )
+        }
+/*
         Column(
             Modifier
                 .fillMaxWidth()
@@ -110,10 +171,7 @@ fun Mapa() {
                             CancellationTokenSource().token,
                         ).await()
                         result?.let { fetchedLocation ->
-                            //ubicacion.latitude = fetchedLocation.latitude
-                            val ubiTemp: LatLng = LatLng(fetchedLocation.latitude, fetchedLocation.longitude)
-                            ubicacion = ubiTemp
-
+                            localizacionViewModel.setUbicacion(fetchedLocation.latitude, fetchedLocation.longitude)
                             /*
                             locationInfo =
                                 "Current location is \n" + "lat : ${fetchedLocation.latitude}\n" +
@@ -129,5 +187,9 @@ fun Mapa() {
                 text = locationInfo,
             )
         }
+         */
+
+     /*
     }
 }
+*/
