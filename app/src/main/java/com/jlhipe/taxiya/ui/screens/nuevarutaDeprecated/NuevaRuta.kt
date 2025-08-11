@@ -1,5 +1,7 @@
+/*
 package com.jlhipe.taxiya.ui.screens.nuevaruta
 
+import android.Manifest
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -8,6 +10,7 @@ import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.theme.screens.layout.Mapa
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,28 +18,41 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.CameraPositionState
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.Marker
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 
-@SuppressLint("MissingPermission")
+@RequiresPermission(
+    anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION],
+)
 @Composable
 fun NuevaRuta(
     navController: NavController,
@@ -46,15 +62,53 @@ fun NuevaRuta(
 ) {
     //string dirección destino
     val destinoInput by localizacionViewModel.destino.observeAsState(initial = "")
-    val destinoLocation = remember{ mutableStateOf((LatLng(localizacionViewModel.destinoLocation.value?.get(0)?.latitude!!, localizacionViewModel.destinoLocation.value?.get(0)?.longitude!!)))}
+    //val destinoLocation = remember{ mutableStateOf((LatLng(localizacionViewModel.destinoLocation.value?.get(0)?.latitude!!, localizacionViewModel.destinoLocation.value?.get(0)?.longitude!!)))}
+    val destinoLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
     //Ubicación del user
-    val userLocation = remember{ mutableStateOf((LatLng(localizacionViewModel.ubicacion.value?.get(0)?.latitude!!, localizacionViewModel.ubicacion.value?.get(0)?.longitude!!)))}
-    //TODO Hacer que en el init se obtenga la ubicación, ahora mismo es 0,0
-    //val userLocation by localizacionViewModel.ubicacion.observeAsState()
+    //val userLocation = remember{ mutableStateOf((LatLng(localizacionViewModel.ubicacion.value?.get(0)?.latitude!!, localizacionViewModel.ubicacion.value?.get(0)?.longitude!!)))}
+    val userLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
     //Estado posición cámara
     var cameraPositionState = rememberCameraPositionState{ position = CameraPosition.fromLatLngZoom(userLocation.value, 10f) }
+
+    val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
+    LaunchedEffect(ubicacionActualizada) {
+        ubicacionActualizada?.getOrNull(0)?.let {
+            val nuevaUbicacion = LatLng(it.latitude, it.longitude)
+            userLocation.value = nuevaUbicacion
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(nuevaUbicacion, 15f)
+        }
+    }
+
+    scope.launch {
+        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(ubicacionActualizada.get(0), 15f))
+    }
+
+    val usePreciseLocation = true
+    val context = LocalContext.current
+    val locationClient = remember {
+        LocationServices.getFusedLocationProviderClient(context)
+    }
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(key1 = true) {
+        scope.launch(Dispatchers.IO) {
+            val priority = if (usePreciseLocation) {
+                Priority.PRIORITY_HIGH_ACCURACY
+            } else {
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY
+            }
+            val result = locationClient.getCurrentLocation(
+                priority,
+                CancellationTokenSource().token,
+            ).await()
+            result?.let { fetchedLocation ->
+                localizacionViewModel.setUbicacion(fetchedLocation.latitude, fetchedLocation.longitude)
+            }
+        }
+
+        localizacionViewModel.setDestino(0.0, 0.0)
+    }
 
     AppScaffold (
         showBackArrow = true,
@@ -83,6 +137,20 @@ fun NuevaRuta(
                  */
                 var newLocation : LatLng
 
+                var mapa = GoogleMap(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(16.dp),
+                    cameraPositionState = cameraPositionState,
+                    onMapClick = {
+                        //userLocation.value = it
+                        destinoLocation.value = it
+                    }
+                ) {
+                    //Marker(state = MarkerState(userLocation.value))
+                    Marker(position = userLocation.value)
+                }
+
                 TextField(value = destinoInput,
                     onValueChange = {
                         //Guarda el nombre de calle
@@ -90,8 +158,9 @@ fun NuevaRuta(
                         //Convierte de nombre de calle a coordenadas
                         localizacionViewModel.requestCoordsFromAdress(it)
                         //TODO Establece la cámara del mapa
-                        //newLocation = (LatLng(destinoLocation.value.latitude,destinoLocation.value.longitude)) <- Quizás cambiar por userLocation
+                        newLocation = (LatLng(destinoLocation.value.latitude,destinoLocation.value.longitude)) //<- Quizás cambiar por userLocation
                         //onLocationSelected(newLocation)
+                        cameraPositionState.position = CameraPosition.fromLatLngZoom(newLocation, 10f)
                     },
                     label = { Text(text = stringResource(R.string.escogeDestino)) }
                 )
@@ -103,22 +172,10 @@ fun NuevaRuta(
                 }) {
                     Text(text = stringResource(R.string.buscaTaxiLibre))
                 }
-
-                GoogleMap(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(16.dp),
-                    cameraPositionState = cameraPositionState,
-                    onMapClick = {
-                        userLocation.value = it
-                    }
-                ) {
-                    //Marker(state = MarkerState(userLocation.value))
-                    Marker(position = userLocation.value)
-                }
             }
         } else {
             Text(stringResource(R.string.necesitaPermisos))
         }
     }
 }
+*/

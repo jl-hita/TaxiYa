@@ -1,18 +1,22 @@
 package com.jlhipe.taxiya.model
 
-import com.google.firebase.firestore.GeoPoint
+import com.google.type.LatLng
 
 data class Ruta(
-    var conductor: String = "", //ID única del conductor, no mostrar en UI
+    var id: String = "", //ID en Firebase de la ruta
+    var conductor: String? = "", //ID única del conductor, no mostrar en UI
     var cliente: String = "",   //ID única del cliente, no mostrar en UI
     var origen: String = "",    //Dirección con el formato texto normal
     var destino: String = "",   //Dirección con el formato texto normal
-    var origenGeo: GeoPoint = GeoPoint(0.0,0.0),    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
-    var destinoGeo: GeoPoint = GeoPoint(0.0, 0.0),    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
-    var momentoSalida: Long = 1,   //Para indicar día y hora de la ruta, segundos desde 1970-01-01 hasta el momento
-    var momentoLlegada: Long = 1,
-    var precio: Number = 0,    //Precio en céntimos de euro
-    var distancia: Number = 0.0,    //Distancia en km con un decimal
+    //var origenGeo: GeoPoint = GeoPoint(0.0,0.0),    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
+    var origenGeo: com.google.android.gms.maps.model.LatLng = com.google.android.gms.maps.model.LatLng(0.0, 0.0),
+    var destinoGeo: com.google.android.gms.maps.model.LatLng = com.google.android.gms.maps.model.LatLng(0.0, 0.0),
+    //var destinoGeo: GeoPoint = GeoPoint(0.0, 0.0),    //Dirección en formato GeoPoint(latitud: Double, longitud: Double)
+    var momentoSalida: Long? = 1,   //Para indicar día y hora de la ruta, segundos desde 1970-01-01 hasta el momento
+    var momentoLlegada: Long? = 1,
+    //var precio: Number = 0,    //Precio en céntimos de euro
+    var distancia: Number = 0.0,    //Distancia en metros con un decimal
+    var duracion: Number = 0.0, //Duración en tiempo(segundos) calculada del viaje (se calcula antes de salir, se actualiza al terminar)
     var asignado:  Boolean = false,    //¿Está la ruta asignada a un taxista?
     var haciaCliente: Boolean = false,    //¿Está el taxi yendo a recoger al usuario?
     var haciaDestino: Boolean = false,    //¿Está el usuario en el taxi en ruta?

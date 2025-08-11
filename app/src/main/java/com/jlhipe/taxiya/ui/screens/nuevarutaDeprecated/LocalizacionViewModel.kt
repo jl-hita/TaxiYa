@@ -1,4 +1,4 @@
-package com.jlhipe.taxiya.ui.screens.nuevaruta
+package com.jlhipe.taxiya.ui.screens.nuevarutaDeprecated
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -6,13 +6,18 @@ import android.app.Application
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.IOException
 import java.util.Locale
-
+/*
 class LocalizacionViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
@@ -39,6 +44,7 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
 
     init {
         setUbicacion(0.0, 0.0)
+        setDestino(0.0, 0.0)
     }
 
     fun tienePermisosGPS():Boolean {
@@ -64,13 +70,13 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
     fun setUbicacion(lat: Double, lon: Double) {
         val tempUbi = mutableListOf<LatLng>()
         tempUbi.add(LatLng(lat, lon))
-        _ubicacion.value = tempUbi
+        _ubicacion.value = tempUbi //Provoca java.lang.IllegalStateException: Cannot invoke setValue on a background thread
     }
 
     fun setDestino(lat: Double, lon: Double) {
         val tempUbi = mutableListOf<LatLng>()
         tempUbi.add(LatLng(lat, lon))
-        _ubicacion.value = tempUbi
+        _destinoLocation.value = tempUbi
     }
 
     fun setDestinoInput(destino: String) {
@@ -88,7 +94,9 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
             "Dirección no encontrada"
         }
     }
-
+/*
+ * usa Geocoder.getFromLocationName, que bloquea el hilo actual (está deprecated en Android 14+)
+ *
     fun requestCoordsFromAdress(direccion: String) {
         val geocoder = Geocoder(context, Locale.getDefault())
         val addresses = geocoder.getFromLocationName(direccion, 1)
@@ -97,4 +105,20 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
             setDestino(addresses[0].latitude, addresses[0].longitude)
         }
     }
+ */
+/*
+    fun requestCoordsFromAdress(direccion: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocationName(direccion, 1)
+                addresses?.firstOrNull()?.let {
+                    setDestino(it.latitude, it.longitude)
+                }
+            } catch (e: IOException) {
+                Log.e("Geo", "Error geocoding: ${e.message}")
+            }
+        }
+    }
 }
+ */

@@ -92,5 +92,5 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
     // Para permisos en runtime
-    //mplementation(libs.accompanist.permissions)
+    //implementation(libs.accompanist.permissions)
 }

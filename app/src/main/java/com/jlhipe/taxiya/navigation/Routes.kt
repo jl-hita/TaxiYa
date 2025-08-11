@@ -17,4 +17,7 @@ class Routes {
 
     @Serializable
     object NuevaRuta
+
+    @Serializable
+    object DetallesRuta
 }

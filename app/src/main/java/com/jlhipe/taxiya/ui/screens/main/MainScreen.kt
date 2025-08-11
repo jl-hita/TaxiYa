@@ -46,7 +46,38 @@ fun MainScreen(
         //botonAccion = navController.navigate(Routes.NuevaRuta)
         showActionButton = true, //TODO cambiar por un check si usuario es conductor
         botonAccion = {
-            navController.navigate(Routes.NuevaRuta);
+            navController.navigate(Routes.NuevaRuta)
+            /*
+            scope.launch(Dispatchers.IO) {
+                val priority = if (usePreciseLocation) {
+                    Priority.PRIORITY_HIGH_ACCURACY
+                } else {
+                    Priority.PRIORITY_BALANCED_POWER_ACCURACY
+                }
+                val result = if (ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+
+                }
+                    locationClient.getCurrentLocation(
+                    priority,
+                    CancellationTokenSource().token,
+                ).await()
+                result?.let { fetchedLocation ->
+                    localizacionViewModel.setUbicacion(fetchedLocation.latitude, fetchedLocation.longitude)
+                    /*
+                    locationInfo =
+                        "Current location is \n" + "lat : ${fetchedLocation.latitude}\n" +
+                                "long : ${fetchedLocation.longitude}\n" + "fetched at ${System.currentTimeMillis()}"
+                     */
+                }
+            }
+             */
         },
         //bottomContent = { BottomBar(modifier = Modifier.padding(vertical = 4.dp), bookViewModel = bookViewModel) }
     ) {
@@ -68,7 +99,7 @@ fun MainScreen(
 
         // Suscripción a la lista de rutas del ViewModel
         val rutas: List<Ruta> by rutaViewModel.rutas.observeAsState(initial = emptyList())
-        // Suscripción a la variable que indica si se están consiguiendo la lista de libros
+        // Suscripción a la variable que indica si se están cargando las rutas
         val isLoadingRutas: Boolean by rutaViewModel.isLoading.observeAsState(initial = false)
 
         val context = LocalContext.current
@@ -99,8 +130,10 @@ fun MainScreen(
                         Text(rutaViewModel.getNombreCiudad(ruta.origenGeo, context)!!, modifier = Modifier.weight(10f))
                         Text(rutaViewModel.getNombreCiudad(ruta.destinoGeo, context)!!, modifier = Modifier.weight(10f))
                         //Text(rutaViewModel.getFechaCompleta(ruta.momentoSalida), modifier = Modifier.weight(10f))
-                        Text(rutaViewModel.getDia(ruta.momentoSalida), modifier = Modifier.weight(10f))
-                        Text(rutaViewModel.getDuracionTiempo(ruta.momentoSalida, ruta.momentoLlegada), modifier = Modifier.weight(10f))
+                        if(ruta.momentoSalida != null) {
+                            Text(rutaViewModel.getDia(ruta.momentoSalida!!), modifier = Modifier.weight(10f))
+                        }
+                        Text(stringResource(R.string.duracion) + ": " + ruta.duracion, modifier = Modifier.weight(10f))
                         //Text("" + ruta.distancia + " km", modifier = Modifier.weight(10f))
                     }
                 }
@@ -129,6 +162,7 @@ fun MainScreen(
             }
         }
 
+        /*
         //TODO Borrame - botón para insertar una ruta de prueba en firebase
         Button(
             onClick = { rutaViewModel.insertaRutaFirebase(
@@ -147,6 +181,7 @@ fun MainScreen(
                 modifier = Modifier.padding(0.dp, 6.dp)
             )
         }
+         */
 
         //TODO Pasar botón de logOut a un menú en el AppTopBar
         Button(

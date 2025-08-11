@@ -1,37 +1,26 @@
 package com.jlhipe.taxiya.ui.screens.main
 
-import android.Manifest
-import android.app.Application
-import android.content.ContentValues.TAG
 import android.content.Context
-import android.content.pm.PackageManager
 import android.location.Geocoder
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.FirebaseAuth
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.jlhipe.taxiya.model.Ruta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -41,8 +30,8 @@ class RutaViewModel: ViewModel() {
     val rutas: LiveData<List<Ruta>> = _rutas
 
     //Ruta seleccionada
-    private val _selectedRuta = MutableLiveData<Ruta>()
-    val selectedRuta: LiveData<Ruta> = _selectedRuta
+    private val _selectedRuta = MutableLiveData<Ruta?>()
+    val selectedRuta: LiveData<Ruta?> = _selectedRuta
 
     //Indica que se están obteniendo los datos de Firebase
     private var _isLoading = MutableLiveData<Boolean>()
@@ -99,11 +88,13 @@ class RutaViewModel: ViewModel() {
                         Ruta(
                             conductor = document.get("conductor").toString(),
                             cliente = document.get("cliente").toString(),
-                            origenGeo = document.get("origenGeo") as GeoPoint,
-                            destinoGeo = document.get("destinoGeo") as GeoPoint,
+                            //origenGeo = document.get("origenGeo") as GeoPoint,
+                            origenGeo = document.get("origenGeo") as LatLng,
+                            //destinoGeo = document.get("destinoGeo") as GeoPoint,
+                            destinoGeo = document.get("destinoGeo") as LatLng,
                             momentoSalida = 1742317200,
                             momentoLlegada = 1742318400,
-                            precio = document.get("precio") as Number,
+                            //precio = document.get("precio") as Number,
                             distancia = document.get("distancia") as Number,
                             asignado = document.get("asignado") as Boolean,
                             haciaCliente = document.get("haciaCliente") as Boolean,
@@ -118,6 +109,7 @@ class RutaViewModel: ViewModel() {
         return listaRutas
     }
 
+    /*
     //Inserta ruta en Cloud Firestore y devuelve un string con la ID del document
     fun insertaRutaFirebase(
         //userID: String,
@@ -132,10 +124,10 @@ class RutaViewModel: ViewModel() {
         destinoGeo: GeoPoint = GeoPoint(39.4256181, -0.4028219),
         //destinoGeoLat: Number = 39.4256181,
         //destinoGeoLon: Number = -0.4028219,
-        momentoSalida: Long = 1742288400,
+        momentoSalida: Long? = 1742288400,
         //momentoLlegada = 1742289600,
-        momentoLlegada: Long = 1742292431,
-        precio: Number = 15.90,
+        momentoLlegada: Long? = 1742292431,
+        //precio: Number = 15.90,
         distancia: Number = 11.8,
         asignado: Boolean = false,
         haciaCliente: Boolean = false,
@@ -154,7 +146,7 @@ class RutaViewModel: ViewModel() {
             destinoGeo = destinoGeo,
             momentoSalida = momentoSalida,
             momentoLlegada = momentoLlegada,
-            precio = precio,
+            //precio = precio,
             distancia = distancia,
             asignado = asignado,
             haciaCliente = haciaCliente,
@@ -176,6 +168,39 @@ class RutaViewModel: ViewModel() {
         //Devolvemos la ID del documento para casos en los que debamos editar la ruta después de crearla
         return documentID
     }
+    */
+
+    fun insertaRutaFirebase(
+        apiKey: String,
+        ruta: Ruta
+    ) {
+        viewModelScope.launch {
+            try {
+                //çobtenemos distancia y duración del trayecto calculados con la api
+                val (distancia, duracion) = getDistanceAndDuration(ruta.origenGeo, ruta.destinoGeo, apiKey)
+
+                ruta.distancia = distancia
+                ruta.duracion = duracion
+
+                //Insertamos en Firebase
+                //FirebaseFirestore.getInstance()
+                    //.collection("rutas")
+                db.collection("rutas")
+                    .add(ruta)
+                    .addOnSuccessListener { docRef ->
+                        Log.d("Firebase", "Ruta insertada con ID: ${docRef.id}")
+                        //signalIsNotLoading()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("Firebase", "Error insertando ruta", e)
+                        //signalIsNotLoading()
+                    }
+            } catch (e: Exception) {
+                Log.e("Firebase", "Error obteniendo distancia/duración", e)
+            }
+        }
+    }
+
 
     fun getRuta(documentId: String): Ruta {
         var ruta = Ruta()
@@ -184,11 +209,13 @@ class RutaViewModel: ViewModel() {
             ruta = Ruta(
                 conductor = document.get("conductor").toString(),
                 cliente = document.get("cliente").toString(),
-                origenGeo = document.get("origenGeo") as GeoPoint,
-                destinoGeo = document.get("destinoGeo") as GeoPoint,
+                //origenGeo = document.get("origenGeo") as GeoPoint,
+                origenGeo = document.get("origenGeo") as LatLng,
+                //destinoGeo = document.get("destinoGeo") as GeoPoint,
+                destinoGeo = document.get("destinoGeo") as LatLng,
                 momentoSalida = document.get("momentoSalida") as Long,
                 momentoLlegada = document.get("momentoLlegada") as Long,
-                precio = document.get("precio") as Number,
+                //precio = document.get("precio") as Number,
                 distancia = document.get("distancia") as Number,
                 asignado = document.get("asignado") as Boolean,
                 haciaCliente = document.get("haciaCliente") as Boolean,
@@ -202,6 +229,36 @@ class RutaViewModel: ViewModel() {
 
     fun updateRuta(documentId: String, ruta: Ruta) {
         db.collection("rutas").document(documentId).set(ruta)
+    }
+
+    //Devuelve las rutas activas
+    fun hayRutaActiva(listaRutas: List<Ruta>): Ruta? {
+        return listaRutas.find { !it.finalizado }
+    }
+
+    //Otra forma de comprobar si el usuario tiene rutas activas
+    fun comprobarRutaActivaDelUsuario(userId: String) {
+        viewModelScope.launch {
+            FirebaseFirestore.getInstance()
+                .collection("rutas")
+                .whereEqualTo("usuarioId", userId)
+                .whereEqualTo("finalizada", false)
+                .limit(1) // Solo una activa a la vez
+                .get()
+                .addOnSuccessListener { documentos ->
+                    if (!documentos.isEmpty) {
+                        val doc = documentos.documents[0]
+                        val ruta = doc.toObject(Ruta::class.java)?.copy(id = doc.id)
+                        _selectedRuta.postValue(ruta)
+                    } else {
+                        _selectedRuta.postValue(null)
+                    }
+                }
+                .addOnFailureListener {
+                    // TODO: Manejo de errores
+                    _selectedRuta.postValue(null)
+                }
+        }
     }
 
     //Asigna un conductor a una ruta
@@ -236,6 +293,14 @@ class RutaViewModel: ViewModel() {
         rutaTemp.haciaDestino = false
         rutaTemp.finalizado = true
         updateRuta(documentId, rutaTemp)
+    }
+
+    //Cancelamos ruta
+    fun cancelarRuta(rutaId: String) {
+        FirebaseFirestore.getInstance()
+            .collection("rutas")
+            .document(rutaId)
+            .update("finalizado", true)
     }
 
     fun signalIsLoading() {
@@ -285,7 +350,7 @@ class RutaViewModel: ViewModel() {
     }
 
     //Obtiene la unidad más pequeña de "ciudad" que pueda obtener del GeoPoint
-    fun getNombreCiudad(geoPoint: GeoPoint, context: Context): String? {
+    fun getNombreCiudad(geoPoint: LatLng, context: Context): String? {
         var cityName: String?
         val geoCoder = Geocoder(context, Locale.getDefault())
         val address = geoCoder.getFromLocation(geoPoint.latitude,geoPoint.longitude,1)
@@ -325,5 +390,61 @@ class RutaViewModel: ViewModel() {
     }
 
     //Para obtener actualizaciones de la ubicación mediante GPS
+
+
+
+    //Calcula distancia y duración en tiempo de la ruta
+    suspend fun getDistanceAndDuration(
+        origin: LatLng,
+        destination: LatLng,
+        apiKey: String
+    ): Pair<Int, Int> = withContext(Dispatchers.IO) {
+        //var apiKey: String = stringResource(R.string.apimakey);
+
+        val urlString = "https://maps.googleapis.com/maps/api/directions/json" +
+                "?origin=${origin.latitude},${origin.longitude}" +
+                "&destination=${destination.latitude},${destination.longitude}" +
+                "&mode=driving" +
+                "&key=$apiKey"
+
+        val url = URL(urlString)
+        val connection = url.openConnection() as HttpURLConnection
+
+        try {
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(response)
+            val routes = json.getJSONArray("routes")
+            if (routes.length() > 0) {
+                val legs = routes.getJSONObject(0).getJSONArray("legs")
+                if (legs.length() > 0) {
+                    val leg = legs.getJSONObject(0)
+                    val distance = leg.getJSONObject("distance").getInt("value") // metros
+                    val duration = leg.getJSONObject("duration").getInt("value") // segundos
+                    return@withContext Pair(distance, duration)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("API", "Error al obtener ruta: ${e.message}")
+        } finally {
+            connection.disconnect()
+        }
+        return@withContext Pair(0, 0)
+    }
+    /*
+     * Ejemplo de uso desde viewmodel o composable
+     */
+    /*
+    val origin = LatLng(40.416775, -3.703790)
+    val destination = LatLng(40.437869, -3.819620)
+    val apiKey = "TU_API_KEY"
+
+    viewModelScope.launch {
+        val resultado = getDistanceAndDuration(origin, destination, apiKey)
+        if (resultado != null) {
+            val (distancia, duracion) = resultado
+            Log.d("Ruta", "Distancia: ${distancia/1000.0} km, Duración: ${duracion/60} min")
+        }
+    }
+    */
 
 }

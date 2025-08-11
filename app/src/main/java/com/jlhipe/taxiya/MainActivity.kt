@@ -13,7 +13,9 @@ import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.theme.TaxiYaTheme
 import android.Manifest
 import android.content.pm.PackageManager
-import com.jlhipe.taxiya.ui.screens.nuevaruta.LocalizacionViewModel
+import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
+
+//import com.jlhipe.taxiya.ui.screens.nuevarutaDeprecated.LocalizacionViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

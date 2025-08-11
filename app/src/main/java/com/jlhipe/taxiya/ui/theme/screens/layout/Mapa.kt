@@ -2,11 +2,7 @@ package com.jlhipe.taxiya.ui.theme.screens.layout
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import com.google.maps.android.compose.GoogleMap
-import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
-import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
-import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
 import android.Manifest
 import android.annotation.SuppressLint
 import androidx.annotation.RequiresPermission
@@ -34,14 +30,12 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.firebase.firestore.GeoPoint
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.jlhipe.taxiya.R
-import com.jlhipe.taxiya.model.Ruta
-import com.jlhipe.taxiya.ui.screens.nuevaruta.LocalizacionViewModel
+import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -54,11 +48,6 @@ import kotlinx.coroutines.tasks.await
 fun Mapa(
     localizacionViewModel: LocalizacionViewModel
 ) {
-    
-
-
-}
-    /*
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val locationClient = remember {
@@ -103,13 +92,13 @@ fun Mapa(
 
 
     AppScaffold() {
-        /*
+
         GoogleMap(
             modifier = Modifier.fillMaxHeight(0.5F),
         ) {
 
         }
-         */
+
 
         GoogleMap(
             modifier = Modifier.fillMaxHeight(0.8F),
@@ -127,7 +116,7 @@ fun Mapa(
                 position = ubicacion.firstOrNull()!!
             )
         }
-/*
+
         Column(
             Modifier
                 .fillMaxWidth()
@@ -187,9 +176,5 @@ fun Mapa(
                 text = locationInfo,
             )
         }
-         */
-
-     /*
     }
 }
-*/

@@ -8,13 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.jlhipe.taxiya.ui.screens.nuevaruta.NuevaRuta
+import com.jlhipe.taxiya.ui.screens.crearRuta.NuevaRuta
 import com.jlhipe.taxiya.ui.screens.splash.SplashScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginScreen
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.MainScreen
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
-import com.jlhipe.taxiya.ui.screens.nuevaruta.LocalizacionViewModel
+import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
+import com.jlhipe.taxiya.ui.screens.detallesruta.DetallesRuta
 import com.jlhipe.taxiya.ui.screens.registro.RegistroScreen
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -51,11 +52,13 @@ fun Navigation(
          *              -> Le lleva en X segundos a la pantalla de espera de petición de cliente
          *                  -> Al marcarse como inactivo le puede hacer un resumen de los datos de la sesión o día                                                      *** Resumen datos día/sesión de conductor ***
          *       -> Cliente: Pantalla con las rutas realizadas en el pasado y un floatingActionButton para pedir viaje                                                  *** Pantalla con lista de rutas realizadas ***
-         *          -> Ha hecho click en pedir viaje: Pantalla para introducir datos y pedir nueva ruta                                                                 *** Página de ruta nueva ***
-         *          -> Ha enviado petición: La app comprueba cada X segundos si alguien la ha aceptado (muestra ETA de conductor a cliente,
+         *          -> Ha hecho click en pedir viaje: Comprueba si hay alguna ruta activa
+         *              -> No hay ruta activa: Pantalla para introducir datos y pedir nueva ruta                                                                 *** Página de ruta nueva ***
+         *              -> Hay ruta activa:
+         *                  -> Ha enviado petición: La app comprueba cada X segundos si alguien la ha aceptado (muestra ETA de conductor a cliente,
          *              estado aceptado/no, botón cancelar, quizás mapa con ubicación del conductor)                                                                    *** Pantalla de espera a conductor ***
-         *          -> El conductor llega al cliente: Muestra datos (ETA, mapa...)                                                                                      *** Pantalla de ruta a destino ***
-         *          -> Llega a destino: Muestra resumen con tiempos, distancias...                                                                                      *** Pantalla resumen viaje con datos ***
+         *                      -> El conductor llega al cliente: Muestra datos (ETA, mapa...)                                                                                      *** Pantalla de ruta a destino ***
+         *                      -> Llega a destino: Muestra resumen con tiempos, distancias...                                                                                      *** Pantalla resumen viaje con datos ***
          * - Pantalla de opciones en las que poder hacer logout, cambiar datos, etc                                                                                     *** Pantalla de opciones ***
          *
          * WEB:
@@ -89,7 +92,13 @@ fun Navigation(
         composable<Routes.NuevaRuta> {
             NuevaRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
         }
-
+/*
+        composable<Routes.DetallesRuta> {
+            //NuevaRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
+            DetallesRuta(ruta: Ruta,
+                onCancelarRuta: (rutaId: String) -> Unit) { }
+        }
+*/
         /*
         composable<Routes.BookInfo> {
             BookInfoScreen(

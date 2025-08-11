@@ -1,5 +1,5 @@
 <resources>
-    <string name="apimakey">AIzaSyA8LBmRK7QSFSrXYSHVkFOOB_6br6rADAM</string>
+    <string name="apimakey">AIzaSyAY6PXmIrCMe7qyUmRsZd_vESZnw9MhXPQ</string>
     <string name="app_name">TaxiYa</string>
     <string name="titulo">TaxiYa</string>
     <string name="goBack">Volver</string>
@@ -38,4 +38,16 @@
     <string name="escogeDestino">Escoge destino</string>
     <string name="buscaTaxiLibre">Busca taxi libre</string>
     <string name="direccionNoEncontrada">Dirección no encontrada</string>
+    <string name="tu">Tú</string>
+    <string name="salida">Salida</string>
+    <string name="trayectoFinalizado">Trayecto finalizado</string>
+    <string name="enRutaHaciaElDestino">En ruta hacia el destino</string>
+    <string name="taxiEnCaminoHaciaElCliente">Taxi en camino hacia el cliente</string>
+    <string name="rutaAsignadaATaxista">Ruta asignada a taxista</string>
+    <string name="pendiente">Pendiente</string>
+    <string name="detallesDeRuta">Detalles de la ruta activa</string>
+    <string name="cancelarRuta">Cancelar ruta</string>
+    <string name="buscandoTaxi">Buscando taxi</string>
+    <string name="estado">Estado</string>
+    <string name="llegada">Llegada</string>
 </resources>

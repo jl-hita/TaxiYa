@@ -68,6 +68,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     var _userId: String = ""
 
+    private var _user = MutableLiveData<User>()
+    val user: LiveData<User> = _user
+
     /*
      * TODO INICIO SACADOS DE LoginService
      */
