@@ -17,6 +17,7 @@ import com.jlhipe.taxiya.model.Ruta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -111,7 +112,7 @@ class RutaViewModel: ViewModel() {
     }
 
 
-
+    /*
     fun insertaRutaFirebase(
         apiKey: String,
         ruta: Ruta
@@ -150,7 +151,33 @@ class RutaViewModel: ViewModel() {
             }
         }
     }
+    */
 
+    suspend fun insertaRutaFirebase(
+        apiKey: String,
+        ruta: Ruta
+    ): String? = try {
+        // Obtener distancia y duración con la API
+        val (distancia, duracion) = getDistanceAndDuration(ruta.origenGeo, ruta.destinoGeo, apiKey)
+        ruta.distancia = distancia
+        ruta.duracion = duracion
+
+        // Guardar ruta en Firestore y esperar resultado
+        val docRef = db.collection("rutas").add(ruta).await()
+
+        // Guardar el id generado en el objeto ruta
+        ruta.id = docRef.id
+
+        //Marcamos la ruta como seleccionada en el viewmodel
+        _selectedRuta.postValue(ruta)
+
+        Log.d("Firebase", "Ruta insertada con ID: ${docRef.id}")
+
+        docRef.id // devolver el id generado
+    } catch (e: Exception) {
+        Log.e("Firebase", "Error insertando ruta", e)
+        null
+    }
 
     fun getRuta(documentId: String): Ruta {
         var ruta = Ruta()
@@ -243,6 +270,22 @@ class RutaViewModel: ViewModel() {
         rutaTemp.haciaDestino = false
         rutaTemp.finalizado = true
         updateRuta(documentId, rutaTemp)
+    }
+
+    //Marca la ruta como finalizada
+    fun marcarRutaFinalizada(rutaId: String) {
+        viewModelScope.launch {
+            try {
+                val db = FirebaseFirestore.getInstance()
+                db.collection("rutas")
+                    .document(rutaId)
+                    .update("finalizado", true)
+                    .await()
+                Log.d("RutaViewModel", "Ruta $rutaId marcada como finalizada")
+            } catch (e: Exception) {
+                Log.e("RutaViewModel", "Error al marcar ruta como finalizada", e)
+            }
+        }
     }
 
     //Cancelamos ruta

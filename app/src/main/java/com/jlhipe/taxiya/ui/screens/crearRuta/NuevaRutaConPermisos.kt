@@ -128,7 +128,7 @@ fun NuevaRutaConPermisos(
     AppScaffold(
         showBackArrow = true,
         onBlackArrowClick = { navController.popBackStack() },
-        showActionButton = true,
+        showActionButton = false,
         botonAccion = { navController.navigate(Routes.NuevaRuta) }
     ) {
         if (localizacionViewModel.tienePermisosGPS()) {
@@ -232,10 +232,21 @@ fun NuevaRutaConPermisos(
                         ruta.visible = true
 
                         //Lo insertamos en Firebase
-                        rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta)
+                        //rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta)
+                        scope.launch {
+                            val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta)
+                            if (idInsertada != null) {
+                                //Navegamos a DetallesRuta
+                                navController.navigate(Routes.DetallesRuta)
+                            } else {
+                                destinationText = "Error al crear ruta"
+                                delay(2000)
+                                navController.navigate(Routes.Main)
+                            }
+                        }
 
                         //Navegamos a DetallesRuta
-                        navController.navigate(Routes.DetallesRuta)
+                        //navController.navigate(Routes.DetallesRuta)
                     },
                     //Deshabilitamos el botón si no hay origen y destino definidos
                     enabled = userLocation.value != LatLng(0.0, 0.0) &&

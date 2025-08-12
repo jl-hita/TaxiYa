@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
+import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
@@ -78,7 +79,11 @@ fun DetallesRuta(
             Button(
                 onClick = {
                     //TODO Marcar la ruta como finalizada en firebase
+                    rutaViewModel.marcarRutaFinalizada(rutaActiva!!.id)
+                    //TODO pasar rutaViewModel.selectedRuta a null o una ruta vacía
+
                     //TODO Navegar a página principal, quizás
+                    navController.navigate(Routes.Main)
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
