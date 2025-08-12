@@ -92,13 +92,12 @@ fun Navigation(
         composable<Routes.NuevaRuta> {
             NuevaRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
         }
-/*
+
         composable<Routes.DetallesRuta> {
             //NuevaRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
-            DetallesRuta(ruta: Ruta,
-                onCancelarRuta: (rutaId: String) -> Unit) { }
+            DetallesRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
         }
-*/
+
         /*
         composable<Routes.BookInfo> {
             BookInfoScreen(

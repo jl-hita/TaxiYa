@@ -127,8 +127,10 @@ fun MainScreen(
                 if(ruta.visible) {
                     HorizontalDivider(thickness = 2.dp)
                     Row() {
-                        Text(rutaViewModel.getNombreCiudad(ruta.origenGeo, context)!!, modifier = Modifier.weight(10f))
-                        Text(rutaViewModel.getNombreCiudad(ruta.destinoGeo, context)!!, modifier = Modifier.weight(10f))
+                        //Text(rutaViewModel.getNombreCiudad(ruta.origenGeo, context)!!, modifier = Modifier.weight(10f))
+                        Text(ruta.origen, modifier = Modifier.weight(10f))
+                        //Text(rutaViewModel.getNombreCiudad(ruta.destinoGeo, context)!!, modifier = Modifier.weight(10f))
+                        Text(ruta.destino, modifier = Modifier.weight(10f))
                         //Text(rutaViewModel.getFechaCompleta(ruta.momentoSalida), modifier = Modifier.weight(10f))
                         if(ruta.momentoSalida != null) {
                             Text(rutaViewModel.getDia(ruta.momentoSalida!!), modifier = Modifier.weight(10f))

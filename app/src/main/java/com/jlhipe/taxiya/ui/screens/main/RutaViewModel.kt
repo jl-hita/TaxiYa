@@ -21,8 +21,10 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.math.log
 
 class RutaViewModel: ViewModel() {
     //Lista de rutas
@@ -42,12 +44,6 @@ class RutaViewModel: ViewModel() {
 
     val userId: String
         get() = Firebase.auth.currentUser?.uid.orEmpty()
-/*
-    //Variables para localizar por GPS
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationRequest: LocationRequest
-    private lateinit var locationCallback: LocationCallback
-*/
 
     //Variable para manejar permisos
     val visiblePermissionDialogeQueue = mutableStateListOf<String>()
@@ -83,15 +79,20 @@ class RutaViewModel: ViewModel() {
                 //if(document.get("userId") == this.userId) { //Alternativa: comprobar si coincide con el campo cliente o conductor
                 //Cargamos solo las rutas en las que el usuario sea el conductor o el cliente
                 if(document.get("cliente") == this.userId || document.get("conductor") == this.userId) {
+                    val origenMap = document.get("origenGeo") as Map<String, Double>
+                    val destinoMap = document.get("destinoGeo") as Map<String, Double>
+
                     listaRutas.add(
                         //document.toObject<Ruta>()!!
                         Ruta(
                             conductor = document.get("conductor").toString(),
                             cliente = document.get("cliente").toString(),
                             //origenGeo = document.get("origenGeo") as GeoPoint,
-                            origenGeo = document.get("origenGeo") as LatLng,
+                            //origenGeo = document.get("origenGeo") as LatLng,
                             //destinoGeo = document.get("destinoGeo") as GeoPoint,
-                            destinoGeo = document.get("destinoGeo") as LatLng,
+                            //destinoGeo = document.get("destinoGeo") as LatLng,
+                            origenGeo = LatLng(origenMap["latitude"]!!, origenMap["longitude"]!!),
+                            destinoGeo = LatLng(destinoMap["latitude"]!!, destinoMap["longitude"]!!),
                             momentoSalida = 1742317200,
                             momentoLlegada = 1742318400,
                             //precio = document.get("precio") as Number,
@@ -109,66 +110,7 @@ class RutaViewModel: ViewModel() {
         return listaRutas
     }
 
-    /*
-    //Inserta ruta en Cloud Firestore y devuelve un string con la ID del document
-    fun insertaRutaFirebase(
-        //userID: String,
-        //identificador: String,
-        cliente: String, // = "5vUgPOL0a4SijzsA9Zjxx92aAbU2",
-        conductor: String, // = "1qw6g1r8ge",
-        origen: String = "Carrer del Mestre Ramírez, 2, 46220 Picassent, Valencia, España",
-        destino: String = "Avinguda de Paiporta, 80, 46910 Benetússer, Valencia",
-        origenGeo: GeoPoint = GeoPoint(39.3669795, -0.4610799),
-        //origenGeoLat: Number = 39.3669795,
-        //origenGeoLon: Number = -0.4610799,
-        destinoGeo: GeoPoint = GeoPoint(39.4256181, -0.4028219),
-        //destinoGeoLat: Number = 39.4256181,
-        //destinoGeoLon: Number = -0.4028219,
-        momentoSalida: Long? = 1742288400,
-        //momentoLlegada = 1742289600,
-        momentoLlegada: Long? = 1742292431,
-        //precio: Number = 15.90,
-        distancia: Number = 11.8,
-        asignado: Boolean = false,
-        haciaCliente: Boolean = false,
-        haciaDestino: Boolean = false,
-        finalizado: Boolean = true
-    ): String {
-        //Variable que guardará la ID del document
-        var documentID: String = ""
 
-        val ruta = Ruta(
-            cliente = cliente,
-            conductor = conductor,
-            origen = origen,
-            destino = destino,
-            origenGeo = origenGeo,
-            destinoGeo = destinoGeo,
-            momentoSalida = momentoSalida,
-            momentoLlegada = momentoLlegada,
-            //precio = precio,
-            distancia = distancia,
-            asignado = asignado,
-            haciaCliente = haciaCliente,
-            haciaDestino = haciaDestino,
-            finalizado = finalizado,
-            visible = true,
-        )
-
-        //La insertamos en la BBDD con una ID generada
-        db.collection("rutas")
-            .add(ruta)
-            .addOnSuccessListener { documentReference ->
-                documentID = documentReference.id
-            }
-            .addOnFailureListener { e ->
-                Log.w(TAG, "Error adding document", e)
-            }
-
-        //Devolvemos la ID del documento para casos en los que debamos editar la ruta después de crearla
-        return documentID
-    }
-    */
 
     fun insertaRutaFirebase(
         apiKey: String,
@@ -178,9 +120,17 @@ class RutaViewModel: ViewModel() {
             try {
                 //çobtenemos distancia y duración del trayecto calculados con la api
                 val (distancia, duracion) = getDistanceAndDuration(ruta.origenGeo, ruta.destinoGeo, apiKey)
-
                 ruta.distancia = distancia
                 ruta.duracion = duracion
+
+                //Traducimos de coordenadas a direcciones en formato legible
+                //val origenDireccion = getAddressFromLatLng(ruta.origenGeo, apiKey)
+                //val destinoDireccion = getAddressFromLatLng(ruta.destinoGeo, apiKey)
+                //ruta.origen = origenDireccion
+                //ruta.destino = destinoDireccion
+
+                //Marcamos la ruta como seleccionada en el viewmodel
+                _selectedRuta.postValue(ruta)
 
                 //Insertamos en Firebase
                 //FirebaseFirestore.getInstance()
@@ -376,13 +326,6 @@ class RutaViewModel: ViewModel() {
         val minutos = (totalSegundos - (horas*3600)) / 60
         //val segundos = totalSegundos - (minutos * 60) - (horas * 3600)
 
-        /*
-        val horas = totalSegundos / 3600
-        val restoHoras = (totalSegundos % 3600) * 3600
-        val minutos = restoHoras / 60
-        val segundos = (minutos % 60) * 60
-        */
-
         if(horas>0)
             return "" + horas + "h " + minutos + "m "// + segundos + "s"
         else
@@ -430,21 +373,158 @@ class RutaViewModel: ViewModel() {
         }
         return@withContext Pair(0, 0)
     }
-    /*
-     * Ejemplo de uso desde viewmodel o composable
-     */
-    /*
-    val origin = LatLng(40.416775, -3.703790)
-    val destination = LatLng(40.437869, -3.819620)
-    val apiKey = "TU_API_KEY"
 
-    viewModelScope.launch {
-        val resultado = getDistanceAndDuration(origin, destination, apiKey)
-        if (resultado != null) {
-            val (distancia, duracion) = resultado
-            Log.d("Ruta", "Distancia: ${distancia/1000.0} km, Duración: ${duracion/60} min")
+    //Traduce de coordenadas a dirección
+    suspend fun getAddressFromLatLng(latLng: LatLng, apiKey: String): String = withContext(Dispatchers.IO) {
+        val urlString = "https://maps.googleapis.com/maps/api/geocode/json" +
+                "?latlng=${latLng.latitude},${latLng.longitude}" +
+                "&key=$apiKey"
+
+        val url = URL(urlString)
+        val connection = url.openConnection() as HttpURLConnection
+
+        try {
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(response)
+            val results = json.getJSONArray("results")
+            if (results.length() > 0) {
+                return@withContext results.getJSONObject(0).getString("formatted_address")
+            }
+        } catch (e: Exception) {
+            Log.e("Geocoding", "Error obteniendo dirección: ${e.message}")
+        } finally {
+            connection.disconnect()
+        }
+        return@withContext ""
+    }
+
+    //Traduce de dirección a coordenadas
+    suspend fun getLatLngFromAddress(address: String, apiKey: String): LatLng? = withContext(Dispatchers.IO) {
+        val encodedAddress = URLEncoder.encode(address, "UTF-8")
+        val urlString = "https://maps.googleapis.com/maps/api/geocode/json" +
+                "?address=$encodedAddress" +
+                "&key=$apiKey"
+
+        val url = URL(urlString)
+        val connection = url.openConnection() as HttpURLConnection
+
+        try {
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(response)
+            val results = json.getJSONArray("results")
+            if (results.length() > 0) {
+                val location = results.getJSONObject(0)
+                    .getJSONObject("geometry")
+                    .getJSONObject("location")
+                val lat = location.getDouble("lat")
+                val lng = location.getDouble("lng")
+                return@withContext LatLng(lat, lng)
+            }
+        } catch (e: Exception) {
+            Log.e("Geocoding", "Error obteniendo coordenadas: ${e.message}")
+        } finally {
+            connection.disconnect()
+        }
+        return@withContext null
+    }
+
+    //Alternativa, traduce de coordenadas a dirección
+    fun obtenerDireccion(latLng: LatLng, context: Context): String {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        val direcciones = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+        return direcciones?.firstOrNull()?.getAddressLine(0) ?: "Dirección desconocida"
+    }
+
+    fun obtenerCoordenadas(direccion: String, context: Context): LatLng? {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        return try {
+            val resultados = geocoder.getFromLocationName(direccion, 1)
+            if (!resultados.isNullOrEmpty()) {
+                val location = resultados.first()
+                LatLng(location.latitude, location.longitude)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
-    */
-
 }
+/*
+     * Ejemplo de uso desde viewmodel o composable
+     */
+/*
+val origin = LatLng(40.416775, -3.703790)
+val destination = LatLng(40.437869, -3.819620)
+val apiKey = "TU_API_KEY"
+
+viewModelScope.launch {
+    val resultado = getDistanceAndDuration(origin, destination, apiKey)
+    if (resultado != null) {
+        val (distancia, duracion) = resultado
+        Log.d("Ruta", "Distancia: ${distancia/1000.0} km, Duración: ${duracion/60} min")
+    }
+}
+*/
+
+/*
+    //Inserta ruta en Cloud Firestore y devuelve un string con la ID del document
+    fun insertaRutaFirebase(
+        //userID: String,
+        //identificador: String,
+        cliente: String, // = "5vUgPOL0a4SijzsA9Zjxx92aAbU2",
+        conductor: String, // = "1qw6g1r8ge",
+        origen: String = "Carrer del Mestre Ramírez, 2, 46220 Picassent, Valencia, España",
+        destino: String = "Avinguda de Paiporta, 80, 46910 Benetússer, Valencia",
+        origenGeo: GeoPoint = GeoPoint(39.3669795, -0.4610799),
+        //origenGeoLat: Number = 39.3669795,
+        //origenGeoLon: Number = -0.4610799,
+        destinoGeo: GeoPoint = GeoPoint(39.4256181, -0.4028219),
+        //destinoGeoLat: Number = 39.4256181,
+        //destinoGeoLon: Number = -0.4028219,
+        momentoSalida: Long? = 1742288400,
+        //momentoLlegada = 1742289600,
+        momentoLlegada: Long? = 1742292431,
+        //precio: Number = 15.90,
+        distancia: Number = 11.8,
+        asignado: Boolean = false,
+        haciaCliente: Boolean = false,
+        haciaDestino: Boolean = false,
+        finalizado: Boolean = true
+    ): String {
+        //Variable que guardará la ID del document
+        var documentID: String = ""
+
+        val ruta = Ruta(
+            cliente = cliente,
+            conductor = conductor,
+            origen = origen,
+            destino = destino,
+            origenGeo = origenGeo,
+            destinoGeo = destinoGeo,
+            momentoSalida = momentoSalida,
+            momentoLlegada = momentoLlegada,
+            //precio = precio,
+            distancia = distancia,
+            asignado = asignado,
+            haciaCliente = haciaCliente,
+            haciaDestino = haciaDestino,
+            finalizado = finalizado,
+            visible = true,
+        )
+
+        //La insertamos en la BBDD con una ID generada
+        db.collection("rutas")
+            .add(ruta)
+            .addOnSuccessListener { documentReference ->
+                documentID = documentReference.id
+            }
+            .addOnFailureListener { e ->
+                Log.w(TAG, "Error adding document", e)
+            }
+
+        //Devolvemos la ID del documento para casos en los que debamos editar la ruta después de crearla
+        return documentID
+    }
+    */

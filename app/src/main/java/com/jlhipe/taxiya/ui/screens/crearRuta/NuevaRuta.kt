@@ -33,14 +33,14 @@ fun NuevaRuta(
     val user = loginViewModel.user.value
 
     LaunchedEffect(user) {
-        //Comprobamos si el usuario tiene una ruca activa, sin finalizar
+        //Comprobamos si el usuario tiene una ruta activa, sin finalizar
         user?.id?.let { rutaViewModel.comprobarRutaActivaDelUsuario(it) }
     }
 
     //Si el usuario tiene una ruta activa llevamos a la página de detalles
     LaunchedEffect(rutaActiva) {
         rutaActiva?.let {
-            //TODO crear DetallesRuta, donde se mostrarán los parámetros de la ruta y botones para cancelar y otros
+            //Navega a DetallesRuta, donde se mostrarán los parámetros de la ruta y botones para cancelar y otros
             navController.navigate(Routes.DetallesRuta)
         }
     }

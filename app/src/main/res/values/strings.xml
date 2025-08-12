@@ -1,5 +1,5 @@
 <resources>
-    <string name="apimakey">AIzaSyAY6PXmIrCMe7qyUmRsZd_vESZnw9MhXPQ</string>
+    <string name="mapssdkkey">AIzaSyA8LBmRK7QSFSrXYSHVkFOOB_6br6rADAM</string>
     <string name="app_name">TaxiYa</string>
     <string name="titulo">TaxiYa</string>
     <string name="goBack">Volver</string>
