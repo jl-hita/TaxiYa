@@ -25,7 +25,10 @@ import java.net.URL
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Locale
-import kotlin.math.log
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class RutaViewModel: ViewModel() {
     //Lista de rutas
@@ -153,15 +156,21 @@ class RutaViewModel: ViewModel() {
     }
     */
 
+    /*
+     * Calcula datos de una ruta nueva
+     * y la onserta en firebase
+     */
     suspend fun insertaRutaFirebase(
         apiKey: String,
-        ruta: Ruta
+        ruta: Ruta,
+        routesApiKey: String
     ): String? = try {
         // Obtener distancia y duración con la API
-        val (distancia, duracion) = getDistanceAndDuration(ruta.origenGeo, ruta.destinoGeo, apiKey)
+        val (distancia, duracion) = getDistanceAndDuration(ruta.origenGeo, ruta.destinoGeo, routesApiKey)
         ruta.distancia = distancia
         ruta.duracion = duracion
 
+        Log.d("Firebase", "Distancia: ${ruta.distancia}, duración: ${ruta.duracion}")
         // Guardar ruta en Firestore y esperar resultado
         val docRef = db.collection("rutas").add(ruta).await()
 
@@ -380,6 +389,7 @@ class RutaViewModel: ViewModel() {
 
 
     //Calcula distancia y duración en tiempo de la ruta
+    /*
     suspend fun getDistanceAndDuration(
         origin: LatLng,
         destination: LatLng,
@@ -393,28 +403,108 @@ class RutaViewModel: ViewModel() {
                 "&mode=driving" +
                 "&key=$apiKey"
 
+        Log.d("API", "Request URL: $urlString")
+
         val url = URL(urlString)
         val connection = url.openConnection() as HttpURLConnection
 
         try {
             val response = connection.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(response)
-            val routes = json.getJSONArray("routes")
-            if (routes.length() > 0) {
-                val legs = routes.getJSONObject(0).getJSONArray("legs")
-                if (legs.length() > 0) {
-                    val leg = legs.getJSONObject(0)
-                    val distance = leg.getJSONObject("distance").getInt("value") // metros
-                    val duration = leg.getJSONObject("duration").getInt("value") // segundos
-                    return@withContext Pair(distance, duration)
-                }
+            val status = json.getString("status")
+            Log.d("API", "Status: $status")
+
+            if (status != "OK") {
+                Log.e("API", "Error API: ${json.optString("error_message")}")
+                return@withContext Pair(0, 0)
             }
+
+            val routes = json.getJSONArray("routes")
+            val legs = routes.getJSONObject(0).getJSONArray("legs")
+            val leg = legs.getJSONObject(0)
+            val distance = leg.getJSONObject("distance").getInt("value")
+            val duration = leg.getJSONObject("duration").getInt("value")
+            return@withContext Pair(distance, duration)
+
         } catch (e: Exception) {
             Log.e("API", "Error al obtener ruta: ${e.message}")
         } finally {
             connection.disconnect()
         }
         return@withContext Pair(0, 0)
+    }
+     */
+
+    suspend fun getDistanceAndDuration(
+        origin: LatLng,
+        destination: LatLng,
+        apiKey: String
+    ): Pair<Int, Int> = withContext(Dispatchers.IO) {
+        val client = OkHttpClient()
+
+        val url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+
+        val jsonBody = """
+        {
+          "origin": {
+            "location": {
+              "latLng": { "latitude": ${origin.latitude}, "longitude": ${origin.longitude} }
+            }
+          },
+          "destination": {
+            "location": {
+              "latLng": { "latitude": ${destination.latitude}, "longitude": ${destination.longitude} }
+            }
+          },
+          "travelMode": "DRIVE",
+          "routingPreference": "TRAFFIC_AWARE",
+          "computeAlternativeRoutes": false,
+          "units": "METRIC"
+        }
+    """.trimIndent()
+
+        val body = jsonBody.toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("X-Goog-Api-Key", apiKey)
+            .addHeader("X-Goog-FieldMask", "routes.duration,routes.distanceMeters")
+            .post(body)
+            .build()
+
+        try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    throw Exception("HTTP error: ${response.code}")
+                }
+
+                val jsonResponse = JSONObject(response.body?.string() ?: "")
+                val routesArray = jsonResponse.optJSONArray("routes")
+                if (routesArray != null && routesArray.length() > 0) {
+                    val route = routesArray.getJSONObject(0)
+                    val distanceMeters = route.optInt("distanceMeters", 0)
+                    val durationSeconds = route.optString("duration", "0s")
+                        .replace("s", "")
+                        .toIntOrNull() ?: 0
+
+                    return@withContext Pair(distanceMeters, durationSeconds)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return@withContext Pair(0, 0)
+    }
+
+    fun formatDuration(seconds: Int): String {
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
+        return if (hours > 0) {
+            String.format(Locale.getDefault(), "%02d:%02d", hours, minutes)
+        } else {
+            String.format(Locale.getDefault(), "%02d min", minutes)
+        }
     }
 
     //Traduce de coordenadas a dirección

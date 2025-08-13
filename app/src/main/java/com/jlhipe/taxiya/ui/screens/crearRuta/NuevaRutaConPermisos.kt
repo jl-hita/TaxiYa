@@ -10,12 +10,10 @@ import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -76,6 +74,8 @@ fun NuevaRutaConPermisos(
     // Cámara del mapa
     val cameraPositionState = rememberCameraPositionState()
 
+    val errorAlCrearRuta = stringResource(R.string.errorAlCrearRuta)
+
     // Cliente de localización
     val locationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
@@ -114,6 +114,8 @@ fun NuevaRutaConPermisos(
 
     //Obtenemos la api key
     val mapssdkkey: String = stringResource(R.string.mapssdkkey)
+    //Clave para Routes API
+    val routesApiKey: String = stringResource(R.string.routesAPI)
 
     // Actualiza destinoLocation desde ViewModel
     LaunchedEffect(destinoActualizado) {
@@ -234,12 +236,12 @@ fun NuevaRutaConPermisos(
                         //Lo insertamos en Firebase
                         //rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta)
                         scope.launch {
-                            val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta)
+                            val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta, routesApiKey)
                             if (idInsertada != null) {
                                 //Navegamos a DetallesRuta
                                 navController.navigate(Routes.DetallesRuta)
                             } else {
-                                destinationText = "Error al crear ruta"
+                                destinationText = errorAlCrearRuta
                                 delay(2000)
                                 navController.navigate(Routes.Main)
                             }

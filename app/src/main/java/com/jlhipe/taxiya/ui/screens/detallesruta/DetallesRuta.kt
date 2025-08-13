@@ -59,11 +59,14 @@ fun DetallesRuta(
         }
         if(rutaActiva?.finalizado == true && rutaActiva?.momentoLlegada != null) {
             Text(stringResource(R.string.llegada)+": ${formatoFecha.format(fechaLlegada)}")
+        } else {
+            val duracion = rutaViewModel.formatDuration(rutaActiva?.duracion as Int)
+            Text(stringResource(R.string.duracion)+ ": $duracion")
         }
 
         //TODO calcular hora llegada y mostrar
         //Text("Precio: %.2f €".format(ruta.precio.toDouble() / 100))
-        Text(stringResource(R.string.distancia)+ rutaActiva?.distancia?.let { ": %.1f km".format(it.toDouble()) })
+        Text(stringResource(R.string.distancia)+ rutaActiva?.distancia?.let { ": %.1f km".format(it.toDouble()/1000) })
 
         Text(stringResource(R.string.estado)+": " + when {
             rutaActiva?.finalizado == true -> stringResource(R.string.trayectoFinalizado) //"Finalizada"

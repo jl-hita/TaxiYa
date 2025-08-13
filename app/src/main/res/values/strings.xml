@@ -50,4 +50,6 @@
     <string name="buscandoTaxi">Buscando taxi</string>
     <string name="estado">Estado</string>
     <string name="llegada">Llegada</string>
+    <string name="errorAlCrearRuta">Error al crear ruta</string>
+    <string name="routesAPI">AIzaSyBE7sPq4SaY375EHua8SR_pkPS85MLE3LI</string>
 </resources>

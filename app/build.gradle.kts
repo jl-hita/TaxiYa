@@ -93,4 +93,8 @@ dependencies {
     implementation(libs.maps.compose)
     // Para permisos en runtime
     //implementation(libs.accompanist.permissions)
+    //Para usar okhttp para obtener distancia y duración de la ruta
+    implementation(libs.okhttp)
+    //Para obtener distancia y duración de la ruta con Routes API
+    //implementation(libs.google.maps.services)
 }
