@@ -37,10 +37,9 @@ fun NuevaRuta(
         user?.id?.let { rutaViewModel.comprobarRutaActivaDelUsuario(it) }
     }
 
-    //Si el usuario tiene una ruta activa llevamos a la página de detalles
+    //Si hay ruta activa navegamos a DetallesRuta
     LaunchedEffect(rutaActiva) {
-        rutaActiva?.let {
-            //Navega a DetallesRuta, donde se mostrarán los parámetros de la ruta y botones para cancelar y otros
+        if(rutaActiva != null) {
             navController.navigate(Routes.DetallesRuta)
         }
     }

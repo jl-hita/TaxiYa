@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +32,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.firebase.firestore.GeoPoint
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.Marker
@@ -39,14 +41,19 @@ import com.jlhipe.taxiya.model.Ruta
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
+@OptIn(FlowPreview::class)
 @RequiresPermission(
     anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION],
 )
+
 @Composable
 fun NuevaRutaConPermisos(
     navController: NavController,
@@ -61,11 +68,13 @@ fun NuevaRutaConPermisos(
     var ruta by remember { mutableStateOf(Ruta()) }
 
     // Observa campos del ViewModel
+    //TODO pasar variables de localizacionViewModel a rutaViewModel
     val destinoInput by localizacionViewModel.destino.observeAsState("")
     val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
     val destinoActualizado by localizacionViewModel.destinoLocation.observeAsState()
-    var destinationText by remember { mutableStateOf("") }
-    var destinationLatLng by remember { mutableStateOf<LatLng?>(null) }
+    val destinationText = remember { mutableStateOf("") }
+    //var destinationLatLng by remember { mutableStateOf<LatLng?>(null) }
+    val destinoLatLng = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
     // Estados locales
     val userLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
@@ -127,6 +136,25 @@ fun NuevaRutaConPermisos(
         }
     }
 
+    // Debounce seguro del TextField
+    LaunchedEffect(destinationText.value) {
+        snapshotFlow { destinationText.value }
+            .debounce(500)
+            .collectLatest { text ->
+                if (text.isNotBlank()) {
+                    val coords = rutaViewModel.obtenerCoordenadas(text, context)
+                    coords?.let {
+                        destinoLatLng.value = LatLng(it.latitude, it.longitude)
+                        ruta.destinoGeo = GeoPoint(it.latitude, it.longitude)
+                        ruta.destino = text
+                        cameraPositionState.animate(
+                            CameraUpdateFactory.newLatLngZoom(destinoLatLng.value, 15f)
+                        )
+                    }
+                }
+            }
+    }
+
     AppScaffold(
         showBackArrow = true,
         onBlackArrowClick = { navController.popBackStack() },
@@ -148,11 +176,12 @@ fun NuevaRutaConPermisos(
                         destinoLocation.value = clickedLocation
                         localizacionViewModel.setDestino(clickedLocation.latitude, clickedLocation.longitude)
                         scope.launch {
+                            //ruta.destinoGeo = clickedLocation
+                            ruta.destinoGeo = GeoPoint(clickedLocation.latitude, clickedLocation.longitude)
                             //ruta.destino = rutaViewModel.getAddressFromLatLng(clickedLocation, mapssdkkey)
-                            ruta.destino = rutaViewModel.obtenerDireccion(clickedLocation, context)
+                            ruta.destino = rutaViewModel.obtenerDireccion(ruta.destinoGeo, context)
                             Log.d("NuevaRuta", "Coordenadas obtenidas: lat=${clickedLocation.latitude}, lng=${clickedLocation.longitude}")
                             Log.d("NuevaRuta", "Dirección: ${ruta.destino}")
-                            ruta.destinoGeo = clickedLocation
                             cameraPositionState.animate(CameraUpdateFactory.newLatLng(clickedLocation))
                         }
                     }
@@ -161,20 +190,9 @@ fun NuevaRutaConPermisos(
                     Marker(position = destinoLocation.value, title = stringResource(R.string.destino))
                 }
 
-                /*
-                TextField(
-                    value = destinoInput,
-                    onValueChange = { input ->
-                        localizacionViewModel.setDestinoInput(input)
-                        localizacionViewModel.requestCoordsFromAdress(input)
-                    },
-                    label = { Text(text = stringResource(R.string.escogeDestino)) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                 */
-
                 var searchJob: Job? = null
 
+                /*
                 OutlinedTextField(
                     value = destinationText,
                     onValueChange = { newValue ->
@@ -188,7 +206,8 @@ fun NuevaRutaConPermisos(
                             if (coords != null) {
                                 Log.d("NuevaRuta", "Coordenadas obtenidas: lat=${coords.latitude}, lng=${coords.longitude}")
                                 //destinationLatLng = coords
-                                ruta.destinoGeo = coords
+                                //ruta.destinoGeo = coords
+                                ruta.destinoGeo = GeoPoint(coords.latitude, coords.longitude)
                                 ruta.destino = destinationText
                                 cameraPositionState.animate(
                                     update = CameraUpdateFactory.newLatLngZoom(coords, 15f)
@@ -200,8 +219,15 @@ fun NuevaRutaConPermisos(
                     },
                     label = { Text(stringResource(R.string.destino)) }
                 )
+                */
+                OutlinedTextField(
+                    value = destinationText.value,
+                    onValueChange = { destinationText.value = it },
+                    label = { Text(stringResource(R.string.destino)) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
 
-
+                /*
                 Button(
                     onClick = {
                         //Indicamos que se está cargando una ruta
@@ -220,7 +246,8 @@ fun NuevaRutaConPermisos(
                         }
                         */
                         //ruta.destino = destinoInput
-                        ruta.origenGeo = userLocation.value
+                        //ruta.origenGeo = userLocation.value
+                        ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
                         scope.launch {
                             ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context)
                         }
@@ -252,7 +279,32 @@ fun NuevaRutaConPermisos(
                     },
                     //Deshabilitamos el botón si no hay origen y destino definidos
                     enabled = userLocation.value != LatLng(0.0, 0.0) &&
-                        (ruta.destinoGeo != LatLng(0.0, 0.0) || ruta.destino.isNotBlank()),
+                        (ruta.destinoGeo != GeoPoint(0.0, 0.0) || ruta.destino.isNotBlank()),
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(text = stringResource(R.string.buscaTaxiLibre))
+                }
+                 */
+
+                Button(
+                    onClick = {
+                        ruta.cliente = loginViewModel.currentUserId
+                        ruta.conductor = ""
+                        ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
+                        scope.launch {
+                            ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context)
+                            val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta, routesApiKey)
+                            if (idInsertada != null) {
+                                navController.navigate(Routes.DetallesRuta)
+                            } else {
+                                destinationText.value = errorAlCrearRuta
+                                delay(2000)
+                                navController.navigate(Routes.Main)
+                            }
+                        }
+                    },
+                    enabled = userLocation.value != LatLng(0.0, 0.0) &&
+                            (ruta.destinoGeo != GeoPoint(0.0, 0.0) || ruta.destino.isNotBlank()),
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(text = stringResource(R.string.buscaTaxiLibre))

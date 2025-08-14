@@ -52,4 +52,6 @@
     <string name="llegada">Llegada</string>
     <string name="errorAlCrearRuta">Error al crear ruta</string>
     <string name="routesAPI">AIzaSyBE7sPq4SaY375EHua8SR_pkPS85MLE3LI</string>
+    <string name="horaEstimadaLlegada">Hora estimada de llegada</string>
+    <string name="listaDeRutas">Rutas</string>
 </resources>
