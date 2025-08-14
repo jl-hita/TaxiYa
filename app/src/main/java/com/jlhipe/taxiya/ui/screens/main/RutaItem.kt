@@ -1,5 +1,6 @@
-package com.jlhipe.taxiya.ui.screens.detallesruta
+package com.jlhipe.taxiya.ui.screens.main
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
-import com.jlhipe.taxiya.ui.screens.main.formatDuration
 
 @Composable
 fun RutaItem(
@@ -30,8 +34,10 @@ fun RutaItem(
         formatDuration(ruta.duracion)
     }
     val backgroundColor = if (!ruta.cancelada) {
+        Log.d("RutaItem", "Ruta NO CANCELADA")
         Color(0xFFD0F0C0) // verde claro
     } else {
+        Log.d("RutaItem", "Ruta CANCELADA")
         Color(0xFFFFC0C0) // rojo claro
     }
 
@@ -56,22 +62,64 @@ fun RutaItem(
                 style = MaterialTheme.typography.titleMedium
             )
              */
+            /*
             Text(
-                text = stringResource(R.string.origen) +": ${ruta.origen}",
+                text = stringResource(R.string.de) +": ${ruta.origen}",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = stringResource(R.string.destino) +": ${ruta.destino}",
+                text = stringResource(R.string.a) +": ${ruta.destino}",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Distancia: $distanciaKm",
+                text = stringResource(R.string.distancia) +": $distanciaKm",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Duración: $duracionFormateada",
+                text = stringResource(R.string.duracion) +": $duracionFormateada",
+                style = MaterialTheme.typography.bodyMedium
+            )
+             */
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(stringResource(R.string.de) + ": ")
+                    }
+                    append(ruta.origen)
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(stringResource(R.string.a) + ": ")
+                    }
+                    append(ruta.destino)
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(stringResource(R.string.distancia) + ": ")
+                    }
+                    append(distanciaKm)
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(stringResource(R.string.duracion) + ": ")
+                    }
+                    append(duracionFormateada)
+                },
                 style = MaterialTheme.typography.bodyMedium
             )
         }
     }
 }
+

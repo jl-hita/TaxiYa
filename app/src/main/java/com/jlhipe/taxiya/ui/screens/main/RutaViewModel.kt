@@ -151,19 +151,26 @@ class RutaViewModel: ViewModel() {
 
                 listaRutas.add(
                     Ruta(
-                        conductor = conductor ?: "",
-                        cliente = cliente ?: "",
-                        origenGeo = origenGeo!!,
-                        destinoGeo = destinoGeo!!,
+                        id = document.id,
+                        conductor = document.getString("conductor") ?: "",
+                        cliente = document.getString("cliente") ?: "",
                         origen = document.getString("origen") ?: "",
                         destino = document.getString("destino") ?: "",
+                        origenGeo = document.get("origenGeo") as? GeoPoint ?: GeoPoint(0.0, 0.0),
+                        destinoGeo = document.get("destinoGeo") as? GeoPoint ?: GeoPoint(0.0, 0.0),
                         momentoSalida = document.getLong("momentoSalida") ?: 0,
                         momentoLlegada = document.getLong("momentoLlegada") ?: 0,
+                        posicionConductor = document.get("posicionConductor") as? GeoPoint ?: GeoPoint(0.0, 0.0),
+                        distanciaConductor = document.getLong("distanciaConductor") ?: 0,
+                        duracionConductor = (document.getLong("duracionConductor") ?: 0L).toInt(),
                         distancia = document.getLong("distancia") ?: 0,
+                        duracion = (document.getLong("duracion") ?: 0L).toInt(),
                         asignado = document.getBoolean("asignado") ?: false,
                         haciaCliente = document.getBoolean("haciaCliente") ?: false,
                         haciaDestino = document.getBoolean("haciaDestino") ?: false,
-                        finalizado = document.getBoolean("finalizado") ?: false
+                        finalizado = document.getBoolean("finalizado") ?: false,
+                        cancelada = document.getBoolean("cancelada") ?: false,
+                        visible = document.getBoolean("visible") ?: true
                     )
                 )
             } else {

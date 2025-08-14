@@ -12,7 +12,7 @@
     <string name="conductor">Conductor</string>
     <string name="usuario">Usuario</string>
     <string name="nombre">Nombre</string>
-    <string name="apellidos">apellidos</string>
+    <string name="apellidos">Apellidos</string>
     <string name="logOut">Cerrar sesión</string>
     <string name="volver">Volver</string>
     <string name="borrarCuenta">Eliminar cuenta</string>
@@ -22,12 +22,12 @@
     <string name="emailYaExiste">Ya existe un usuario con ese email</string>
     <string name="loginConGoogle">Usa tu cuenta google</string>
     <string name="origen">Origen</string>
-    <string name="destino">destino</string>
-    <string name="horaSalida">hora de salida</string>
-    <string name="fecha">fecha</string>
+    <string name="destino">Destino</string>
+    <string name="horaSalida">Hora de salida</string>
+    <string name="fecha">Fecha</string>
     <string name="cargando">Cargando...</string>
-    <string name="duracion">duración</string>
-    <string name="distancia">distancia</string>
+    <string name="duracion">Duración</string>
+    <string name="distancia">Distancia</string>
     <string name="nuevaRuta">Nueva ruta</string>
     <string name="ok">Ok</string>
     <string name="aceptar">Aceptar</string>
@@ -54,4 +54,6 @@
     <string name="routesAPI">AIzaSyBE7sPq4SaY375EHua8SR_pkPS85MLE3LI</string>
     <string name="horaEstimadaLlegada">Hora estimada de llegada</string>
     <string name="listaDeRutas">Rutas</string>
+    <string name="de">De</string>
+    <string name="a">A</string>
 </resources>
