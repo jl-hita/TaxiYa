@@ -32,6 +32,7 @@ import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
+import kotlinx.coroutines.delay
 
 /*
 @Composable
@@ -232,6 +233,7 @@ fun MainScreen(
         LaunchedEffect(rutaActiva) {
             if (rutaActiva != null && !yaNavegado) {
                 yaNavegado = true
+                rutaViewModel.actualizarPuedeVolver(true)
                 navController.navigate(Routes.DetallesRuta)
             }
         }

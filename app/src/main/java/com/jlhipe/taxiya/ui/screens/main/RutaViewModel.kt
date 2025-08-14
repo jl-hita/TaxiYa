@@ -3,7 +3,10 @@ package com.jlhipe.taxiya.ui.screens.main
 import android.content.Context
 import android.location.Geocoder
 import android.util.Log
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -60,6 +63,11 @@ class RutaViewModel: ViewModel() {
     //Especifica cada cuantos ms se recarga la ruta de la BBDD
     private val tiempoRecarga :Long = 10000
 
+    //Para controlar un aspecto de la navegación
+    //private var _puedeVolver = MutableLiveData<Boolean>(false)
+    //val puedeVolver: LiveData<Boolean> = _puedeVolver
+    var puedeVolver by mutableStateOf(false)
+
     init {
         loadRutas()
     }
@@ -110,7 +118,7 @@ class RutaViewModel: ViewModel() {
         Log.d("rutaViewModel", "Cargando rutas de usuario $usuario")
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.postValue(true)
-            delay(2000)
+            //delay(2000)
             val rutasCargadas = loadRutasFirebase(usuario) //Cargamos las rutas de firebase
             _rutas.postValue(rutasCargadas)
             _isLoading.postValue(false)
@@ -131,6 +139,7 @@ class RutaViewModel: ViewModel() {
         }
     }
      */
+
     suspend fun loadRutasFirebase(userId: String): List<Ruta> {
         val db = Firebase.firestore
         val snapshot = db.collection("rutas").get().await()
@@ -232,6 +241,12 @@ class RutaViewModel: ViewModel() {
         return listaRutas
     }
     */
+
+    fun actualizarPuedeVolver(volver: Boolean) {
+        //_puedeVolver.postValue(volver)
+        //_puedeVolver.value = volver
+        puedeVolver = volver
+    }
 
     //Borra todas las rutas de firebase
     fun borrarTodasLasRutas() {
@@ -467,9 +482,25 @@ class RutaViewModel: ViewModel() {
                         )
                     )
                     .await()
-                Log.d("RutaViewModel", "Ruta $rutaId marcada como finalizada")
+                Log.d("RutaViewModel", "Ruta $rutaId cancelada")
             } catch (e: Exception) {
-                Log.e("RutaViewModel", "Error al marcar ruta como finalizada", e)
+                Log.e("RutaViewModel", "Error al cancelar la ruta $rutaId", e)
+            }
+        }
+    }
+
+    //Elimina la ruta seleccionada
+    fun eliminarRuta(rutaId: String) {
+        viewModelScope.launch {
+            try {
+                val db = FirebaseFirestore.getInstance()
+                db.collection("rutas")
+                    .document(rutaId)
+                    .delete()
+                    .await()
+                Log.d("RutaViewModel", "Ruta $rutaId eliminada")
+            } catch (e: Exception) {
+                Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
             }
         }
     }

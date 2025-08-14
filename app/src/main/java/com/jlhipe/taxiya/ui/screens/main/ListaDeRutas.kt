@@ -20,6 +20,7 @@ fun ListaDeRutas(
         items(rutas, key = { it.id }) { ruta ->
             RutaItem(ruta = ruta, onClick = {
                 rutaViewModel.setRuta(ruta)
+                rutaViewModel.actualizarPuedeVolver(true)
                 navController.navigate(Routes.DetallesRuta)
             })
         }

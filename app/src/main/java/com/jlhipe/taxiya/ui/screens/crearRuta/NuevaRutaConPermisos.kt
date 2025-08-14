@@ -295,6 +295,7 @@ fun NuevaRutaConPermisos(
                             ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context)
                             val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta, routesApiKey)
                             if (idInsertada != null) {
+                                rutaViewModel.actualizarPuedeVolver(false)
                                 navController.navigate(Routes.DetallesRuta)
                             } else {
                                 destinationText.value = errorAlCrearRuta

@@ -56,4 +56,5 @@
     <string name="listaDeRutas">Rutas</string>
     <string name="de">De</string>
     <string name="a">A</string>
+    <string name="eliminarRuta">Eliminar ruta</string>
 </resources>
