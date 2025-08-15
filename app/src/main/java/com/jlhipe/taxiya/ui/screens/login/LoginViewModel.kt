@@ -152,27 +152,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             null
         }
     }
-    /*
-    private fun cargarUsuarioDesdeFirestore(uid: String) {
-        if (uid.isEmpty()) return // <-- Evita llamar a Firestore con uid vacío
-
-        try {
-            Firebase.firestore.collection("usuarios")
-                .document(uid)
-                .get()
-                .addOnSuccessListener { doc ->
-                    val usuario = doc.toObject(User::class.java)
-                    _user.postValue(usuario) // puede ser null si no existe
-                }
-                .addOnFailureListener { e ->
-                    Log.e("LOGIN", "Error cargando usuario desde Firestore", e)
-                }
-        } catch (e: Exception) {
-            Log.d("LoginViewModel", "Excepción en cargarUsuarioDesdeFirestore -> ${e.message}")
-        }
-
-    }
-     */
 
     // ----------------------------------------------------------
     // ACTUALIZAR CAMPOS
@@ -182,6 +161,57 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     fun updateNombre(newNombre: String) { _nombre.value = newNombre }
     fun updateApellidos(newApellidos: String) { _apellidos.value = newApellidos }
     fun updateEsConductor(esConductor: Boolean) { _esConductor.value = esConductor }
+
+    fun actualizarUsuario(nombre: String, apellidos: String, esConductor: Boolean) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        val cambios = mapOf(
+            "nombre" to nombre,
+            "apellidos" to apellidos,
+            "esConductor" to esConductor
+        )
+
+        Firebase.firestore.collection("usuarios").document(uid).update(cambios)
+            .addOnSuccessListener {
+                // Actualiza en memoria también
+                _user.value = _user.value?.copy(
+                    nombre = nombre,
+                    apellidos = apellidos,
+                    esConductor = esConductor
+                )
+            }
+            .addOnFailureListener {
+                Log.e("LoginViewModel", "Error actualizando usuario", it)
+            }
+    }
+
+    //Eliminar cuenta
+    fun eliminarCuentaYDatos() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        viewModelScope.launch {
+            try {
+                //Borrar rutas donde cliente == uid
+                val rutasSnap = Firebase.firestore.collection("rutas")
+                    .whereEqualTo("cliente", uid)
+                    .get()
+                    .await()
+
+                for (doc in rutasSnap.documents) {
+                    doc.reference.delete().await()
+                }
+
+                //Borrar usuario en la colección usuarios
+                Firebase.firestore.collection("usuarios").document(uid).delete().await()
+
+                //Borrar cuenta en Firebase Auth
+                FirebaseAuth.getInstance().currentUser?.delete()?.await()
+
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "Error eliminando cuenta", e)
+            }
+        }
+    }
 
     //TODO BORRAME, prueba
     fun probarLogin() {
@@ -198,33 +228,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             Firebase.auth.signInWithCredential(credential).await()
 
             cargarUsuarioFirebase()
-
-            /*
-            val uid = Firebase.auth.currentUser?.uid
-            if (uid != null) {
-                // Verificamos si ya existe en Firestore
-                val doc = Firebase.firestore.collection("usuarios").document(uid).get().await()
-                val usuario = doc.toObject(User::class.java) ?: run {
-                    // Si no existe, lo creamos
-                    val nuevoUser = User(
-                        id = uid,
-                        email = Firebase.auth.currentUser?.email ?: "",
-                        esConductor = _esConductor.value,
-                        nombre = _nombre.value,
-                        apellidos = _apellidos.value
-                    )
-                    Firebase.firestore.collection("usuarios").document(uid).set(nuevoUser).await()
-                    nuevoUser
-                }
-
-                withContext(Dispatchers.Main) {
-                    _user.value = usuario
-                    _logeado.value = true
-                }
-            } else {
-                withContext(Dispatchers.Main) { _logeado.value = false }
-            }
-            */
         } catch (e: Exception) {
             Log.d("LoginViewModel", "Excepción en signInWithGoogle -> ${e.message}")
             withContext(Dispatchers.Main) {
@@ -270,18 +273,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 GoogleIdTokenCredential.createFrom(credential.data)
 
             signInWithGoogle(googleIdTokenCredential.idToken)
-
-            /*
-            Firebase.auth.currentUser?.uid?.let { uid ->
-                val usuario = cargarUsuarioDesdeFirestore(uid)
-                withContext(Dispatchers.Main) {
-                    _user.value = usuario
-                    _logeado.value = true
-                }
-            } ?: run {
-                withContext(Dispatchers.Main) { _logeado.value = false }
-            }
-             */
         }
     }
 

@@ -20,7 +20,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +41,6 @@ import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -65,11 +63,11 @@ fun NuevaRutaConPermisos(
     val scope = rememberCoroutineScope()
 
     //var ruta: Ruta = Ruta()
-    var ruta by remember { mutableStateOf(Ruta()) }
+    val ruta by remember { mutableStateOf(Ruta()) }
 
     // Observa campos del ViewModel
     //TODO pasar variables de localizacionViewModel a rutaViewModel
-    val destinoInput by localizacionViewModel.destino.observeAsState("")
+    //val destinoInput by localizacionViewModel.destino.observeAsState("")
     val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
     val destinoActualizado by localizacionViewModel.destinoLocation.observeAsState()
     val destinationText = remember { mutableStateOf("") }
@@ -159,7 +157,9 @@ fun NuevaRutaConPermisos(
         showBackArrow = true,
         onBlackArrowClick = { navController.popBackStack() },
         showActionButton = false,
-        botonAccion = { navController.navigate(Routes.NuevaRuta) }
+        botonAccion = { navController.navigate(Routes.NuevaRuta) },
+        loginViewModel = loginViewModel,
+        navController = navController,
     ) {
         if (localizacionViewModel.tienePermisosGPS()) {
             Column(
@@ -190,101 +190,14 @@ fun NuevaRutaConPermisos(
                     Marker(position = destinoLocation.value, title = stringResource(R.string.destino))
                 }
 
-                var searchJob: Job? = null
+                //var searchJob: Job? = null
 
-                /*
-                OutlinedTextField(
-                    value = destinationText,
-                    onValueChange = { newValue ->
-                        destinationText = newValue
-
-                        searchJob?.cancel()
-                        searchJob = scope.launch {
-                            delay(500) // debounce
-                            //val coords = rutaViewModel.getLatLngFromAddress(destinationText, mapssdkkey)
-                            val coords = rutaViewModel.obtenerCoordenadas(destinationText, context)
-                            if (coords != null) {
-                                Log.d("NuevaRuta", "Coordenadas obtenidas: lat=${coords.latitude}, lng=${coords.longitude}")
-                                //destinationLatLng = coords
-                                //ruta.destinoGeo = coords
-                                ruta.destinoGeo = GeoPoint(coords.latitude, coords.longitude)
-                                ruta.destino = destinationText
-                                cameraPositionState.animate(
-                                    update = CameraUpdateFactory.newLatLngZoom(coords, 15f)
-                                )
-                            } else {
-                                Log.d("NuevaRuta", "No se obtuvieron coordenadas para: $destinationText")
-                            }
-                        }
-                    },
-                    label = { Text(stringResource(R.string.destino)) }
-                )
-                */
                 OutlinedTextField(
                     value = destinationText.value,
                     onValueChange = { destinationText.value = it },
                     label = { Text(stringResource(R.string.destino)) },
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-
-                /*
-                Button(
-                    onClick = {
-                        //Indicamos que se está cargando una ruta
-                        //rutaViewModel.signalIsLoading();
-
-                        //Creamos el objeto Ruta
-
-                        ruta.cliente = loginViewModel.currentUserId
-                        ruta.conductor = ""
-                        /*
-                        ruta.origen = localizacionViewModel.requestGeocodeLocation(userLocation.value)
-                        if(destinoInput.isNotBlank()) {
-                            ruta.destino = destinoInput
-                        } else {
-                            ruta.destino = localizacionViewModel.requestGeocodeLocation(destinoInput)
-                        }
-                        */
-                        //ruta.destino = destinoInput
-                        //ruta.origenGeo = userLocation.value
-                        ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
-                        scope.launch {
-                            ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context)
-                        }
-                        //ruta.destinoGeo = destinoLocation.value
-                        ruta.momentoSalida = null
-                        ruta.momentoLlegada = null
-                        ruta.asignado = false
-                        ruta.haciaCliente = false
-                        ruta.haciaDestino = false
-                        ruta.finalizado = false
-                        ruta.visible = true
-
-                        //Lo insertamos en Firebase
-                        //rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta)
-                        scope.launch {
-                            val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta, routesApiKey)
-                            if (idInsertada != null) {
-                                //Navegamos a DetallesRuta
-                                navController.navigate(Routes.DetallesRuta)
-                            } else {
-                                destinationText = errorAlCrearRuta
-                                delay(2000)
-                                navController.navigate(Routes.Main)
-                            }
-                        }
-
-                        //Navegamos a DetallesRuta
-                        //navController.navigate(Routes.DetallesRuta)
-                    },
-                    //Deshabilitamos el botón si no hay origen y destino definidos
-                    enabled = userLocation.value != LatLng(0.0, 0.0) &&
-                        (ruta.destinoGeo != GeoPoint(0.0, 0.0) || ruta.destino.isNotBlank()),
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(text = stringResource(R.string.buscaTaxiLibre))
-                }
-                 */
 
                 Button(
                     onClick = {

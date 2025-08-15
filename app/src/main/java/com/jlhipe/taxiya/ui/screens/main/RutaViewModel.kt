@@ -1,5 +1,6 @@
 package com.jlhipe.taxiya.ui.screens.main
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
 import android.util.Log
@@ -15,6 +16,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.jlhipe.taxiya.model.Ruta
@@ -34,6 +36,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.util.Date
 
 class RutaViewModel: ViewModel() {
     //Lista de rutas
@@ -136,7 +139,7 @@ class RutaViewModel: ViewModel() {
         val currentUser = Firebase.auth.currentUser ?: return emptyList()
 
         val db = Firebase.firestore
-        val snapshot = db.collection("rutas").get().await()
+        val snapshot = db.collection("rutas").orderBy("fechaCreacion", Query.Direction.DESCENDING).get().await() //Ordenamos por fechaCreacion, descendiente
 
         val listaRutas = mutableListOf<Ruta>()
 
@@ -147,22 +150,23 @@ class RutaViewModel: ViewModel() {
             Log.d("LoadRutas", "Documento ID=${document.id}, cliente=$cliente, conductor=$conductor, userId=$userId")
 
             if (cliente == userId || conductor == userId) {
-                val origenGeo = document.getGeoPoint("origenGeo")
-                val destinoGeo = document.getGeoPoint("destinoGeo")
+                //val origenGeo = document.getGeoPoint("origenGeo")
+                //val destinoGeo = document.getGeoPoint("destinoGeo")
 
                 Log.d("LoadRutas", "Agregando ruta ${document.id} -> $cliente / $conductor")
 
                 listaRutas.add(
                     Ruta(
                         id = document.id,
+                        fechaCreacion = document.getLong("fechaCreacion") ?: 1L,
                         conductor = document.getString("conductor") ?: "",
                         cliente = document.getString("cliente") ?: "",
                         origen = document.getString("origen") ?: "",
                         destino = document.getString("destino") ?: "",
                         origenGeo = document.get("origenGeo") as? GeoPoint ?: GeoPoint(0.0, 0.0),
                         destinoGeo = document.get("destinoGeo") as? GeoPoint ?: GeoPoint(0.0, 0.0),
-                        momentoSalida = document.getLong("momentoSalida") ?: 0,
-                        momentoLlegada = document.getLong("momentoLlegada") ?: 0,
+                        momentoSalida = document.getLong("momentoSalida") ?: 1L,
+                        momentoLlegada = document.getLong("momentoLlegada") ?: 1L,
                         posicionConductor = document.get("posicionConductor") as? GeoPoint ?: GeoPoint(0.0, 0.0),
                         distanciaConductor = document.getLong("distanciaConductor") ?: 0,
                         duracionConductor = (document.getLong("duracionConductor") ?: 0L).toInt(),
@@ -229,6 +233,8 @@ class RutaViewModel: ViewModel() {
         ruta.distancia = distancia.toLong()
         ruta.duracion = duracion
 
+        ruta.fechaCreacion = System.currentTimeMillis()
+
         Log.d("Firebase", "Distancia: ${ruta.distancia}, duración: ${ruta.duracion}")
         // Guardar ruta en Firestore y esperar resultado
         val docRef = db.collection("rutas").add(ruta).await()
@@ -263,6 +269,7 @@ class RutaViewModel: ViewModel() {
 
         db.collection("rutas").document(documentId).get().addOnSuccessListener { document ->
             ruta = Ruta(
+                fechaCreacion = document.get("fechaCreacion") as Long,
                 conductor = document.get("conductor").toString(),
                 cliente = document.get("cliente").toString(),
                 origenGeo = document.get("origenGeo") as GeoPoint,

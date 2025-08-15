@@ -58,4 +58,13 @@
     <string name="a">A</string>
     <string name="eliminarRuta">Eliminar ruta</string>
     <string name="cerrarSesion">Cerrar sesión</string>
+    <string name="menu">Menu</string>
+    <string name="perfil">Perfil</string>
+    <string name="guardarCambios">Guardar cambios</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="idUsuario">ID Usuario</string>
+    <string name="id">ID</string>
+    <string name="esConductor">Es conductor</string>
+    <string name="perfilDeUsuario">Perfil de Usuario</string>
+    <string name="eliminarCuenta">Eliminar cuenta</string>
 </resources>

@@ -39,7 +39,7 @@ import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-
+/*
 @RequiresPermission(
     anyOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION],
 )
@@ -178,3 +178,4 @@ fun Mapa(
         }
     }
 }
+ */

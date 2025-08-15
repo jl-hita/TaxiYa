@@ -218,7 +218,7 @@ fun DetallesRuta(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(30.dp))
 
             Log.d("DetallesRuta", "puedeVolver = ${rutaViewModel.puedeVolver}")
 
@@ -376,6 +376,7 @@ fun DetallesRuta(
                     onClick = {
                         Log.d("DetallesRuta", "Finalizando ruta $ruta")
                         rutaViewModel.marcarRutaCancelada(ruta.id)
+                        //TODO Comprobar si la ruta tiene conductor y mandar notificación
                         //rutaViewModel.marcarRutaFinalizada(ruta.id)
                         rutaViewModel.deseleccionarRuta()
                         rutaViewModel.loadRutas()

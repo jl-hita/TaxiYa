@@ -22,6 +22,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun RutaItem(
@@ -50,6 +53,10 @@ fun RutaItem(
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
+        val formatoFecha = remember {
+            SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        }
+
         Column(modifier = Modifier.padding(16.dp)) {
             /*
             Text("Origen: ${ruta.origen}", fontWeight = FontWeight.Bold)
@@ -81,6 +88,14 @@ fun RutaItem(
                 style = MaterialTheme.typography.bodyMedium
             )
              */
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(formatoFecha.format(Date(ruta.fechaCreacion!!)))
+                    }
+                },
+                style = MaterialTheme.typography.bodyMedium
+            )
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {

@@ -7,6 +7,7 @@ import com.google.firebase.firestore.GeoPoint
 
 data class Ruta(
     var id: String = "", //ID en Firebase de la ruta
+    var fechaCreacion: Long? = 1, //Momento en el que fue creada la ruta, para ordenarla correctamente
     var conductor: String? = "", //ID única del conductor, no mostrar en UI
     var cliente: String = "",   //ID única del cliente, no mostrar en UI
     var origen: String = "",    //Dirección con el formato texto normal

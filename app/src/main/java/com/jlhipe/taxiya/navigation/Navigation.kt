@@ -16,6 +16,7 @@ import com.jlhipe.taxiya.ui.screens.main.MainScreen
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.detallesruta.DetallesRuta
+import com.jlhipe.taxiya.ui.screens.perfilUsuario.PerfilUsuarioScreen
 import com.jlhipe.taxiya.ui.screens.registro.RegistroScreen
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -94,8 +95,11 @@ fun Navigation(
         }
 
         composable<Routes.DetallesRuta> {
-            //NuevaRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
             DetallesRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
+        }
+
+        composable<Routes.PerfilUsuario> {
+            PerfilUsuarioScreen(navController, loginViewModel, rutaViewModel)
         }
 
         /*

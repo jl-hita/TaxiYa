@@ -20,4 +20,7 @@ class Routes {
 
     @Serializable
     object DetallesRuta
+
+    @Serializable
+    object PerfilUsuario
 }

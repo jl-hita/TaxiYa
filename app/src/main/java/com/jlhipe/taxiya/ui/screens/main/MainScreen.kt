@@ -68,7 +68,9 @@ fun MainScreen(
                     navController.navigate(Routes.NuevaRuta)
                 }
             }
-        }
+        },
+        loginViewModel = loginViewModel,
+        navController = navController,
     ) {
         val logeado by loginViewModel.logeado.observeAsState(initial = true)
         if (!logeado) {
@@ -122,7 +124,7 @@ fun MainScreen(
         LaunchedEffect(rutaActiva) {
             if (rutaActiva != null && !yaNavegado) {
                 yaNavegado = true
-                rutaViewModel.actualizarPuedeVolver(true)
+                rutaViewModel.actualizarPuedeVolver(false)
                 navController.navigate(Routes.DetallesRuta)
             }
         }
@@ -134,9 +136,9 @@ fun MainScreen(
 
         Column(
             modifier = Modifier
-                //.fillMaxSize()
-                .fillMaxHeight(0.7F)
-                .fillMaxWidth()
+                .fillMaxSize()
+                //.fillMaxHeight(0.7F)
+                //.fillMaxWidth()
                 .padding(16.dp)
         ) {
             Text(
@@ -180,28 +182,9 @@ fun MainScreen(
                     CircularProgressIndicator()
                 }
             }
-
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = { loginViewModel.onLogOutClick() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            ) {
-                Text(stringResource(R.string.logOut))
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Button(
-                onClick = { loginViewModel.onDeleteAccountClick() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-            ) {
-                Text(stringResource(R.string.borrarCuenta))
-            }
         }
 
+        /*
         //TODO BORRAME
         Button(
             //Boton de borrar cuenta
@@ -243,6 +226,7 @@ fun MainScreen(
                 modifier = Modifier.padding(0.dp, 6.dp)
             )
         }
+         */
     }
 }
 
