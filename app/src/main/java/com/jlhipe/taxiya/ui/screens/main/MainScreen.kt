@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,12 +28,231 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+
+//TODO Comprobar al principio si el usuario es conductor
+//TODO Si es conductor -> Se filtran rutas por conductor = userId
+//TODO Si es usuario -> Se filtran rutas por cliente = userId
+//TODO Lo que hace ahora mismo es cargar todas las rutas en las que userId == conductor/usuario <- quizás sea suficiente -> Al mostrar los detalles
+// se puede indicar si la participación en la ruta es como cliente o como conductor
+
+//TODO Al llamar al botón crearRuta, si es conductor llevará a BuscarClientePre
+
+@Composable
+fun MainScreen(
+    navController: NavController,
+    loginViewModel: LoginViewModel,
+    rutaViewModel: RutaViewModel
+) {
+    //val usuario = loginViewModel.user.value
+    val user by loginViewModel.user.observeAsState()
+
+    AppScaffold(
+        showBackArrow = false,
+        showActionButton = true,
+        botonAccion = {
+            if (user == null) {
+                //Mientras se carga no hay acción en el botón
+            } else {
+                if(user!!.esConductor) {
+                    //TODO Navegar a BuscarClientePre
+                } else {
+                    navController.navigate(Routes.NuevaRuta)
+                }
+            }
+        }
+    ) {
+        val logeado by loginViewModel.logeado.observeAsState(initial = true)
+        if (!logeado) {
+            LaunchedEffect(Unit) {
+                loginViewModel.navegar { navController.navigate(Routes.Login) }
+            }
+        }
+
+        val rutas by rutaViewModel.rutas.observeAsState(initial = emptyList())
+        //val rutas = rutaViewModel.rutas.value
+        //val rutasFiltradas = remember(rutas) { rutas?.filter { it.visible && it.finalizado } }
+        val isLoadingRutas by rutaViewModel.isLoading.observeAsState(initial = false)
+        val rutaActiva by rutaViewModel.selectedRuta.observeAsState()
+        //val user = loginViewModel.currentUserId
+        //val user = loginViewModel.user.value!!.id
+
+        //val formatoFecha = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+        var yaNavegado by remember { mutableStateOf(false) }
+
+        // Si user es null, lanzamos la carga
+        LaunchedEffect(user) {
+            if (user == null) {
+                loginViewModel.cargarUsuarioFirebase()
+            }
+        }
+
+        // Mostramos contenido solo si user != null
+        user?.let { u ->
+            //val userId = u.id
+            //TODO: resto de la UI que necesita userId
+            LaunchedEffect(user) {
+                rutaViewModel.comprobarRutaActivaDelUsuario(user!!.id)
+            }
+        } ?: run {
+            //Mientras se carga el usuario, podemos mostrar un ProgressIndicator
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        /*
+        LaunchedEffect(user) {
+            rutaViewModel.comprobarRutaActivaDelUsuario(user!!.id)
+        }
+        */
+
+        // Navegación cuando hay ruta activa
+        LaunchedEffect(rutaActiva) {
+            if (rutaActiva != null && !yaNavegado) {
+                yaNavegado = true
+                rutaViewModel.actualizarPuedeVolver(true)
+                navController.navigate(Routes.DetallesRuta)
+            }
+        }
+
+        // Solo cargamos rutas si hay usuario
+        LaunchedEffect(logeado) {
+            rutaViewModel.loadRutas()
+        }
+
+        Column(
+            modifier = Modifier
+                //.fillMaxSize()
+                .fillMaxHeight(0.7F)
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.listaDeRutas),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Lista de rutas filtradas
+            val rutasFiltradas = remember(rutas) {
+                rutas?.filter { it.visible && it.finalizado }
+            }
+
+            Log.d("MainScreen", "Rutas -> $rutas")
+            Log.d("MainScreen", "Rutas filtradas -> $rutasFiltradas")
+
+            if (rutasFiltradas != null) {
+                ListaDeRutas(
+                    rutas = rutasFiltradas,
+                    /*
+                    onRutaClick = {
+                        rutaViewModel.setRuta(rutaActiva!!)
+                        navController.navigate(Routes.DetallesRuta)
+                    },
+                     */
+                    navController = navController,
+                    rutaViewModel
+                )
+            }
+
+            // Indicador de carga
+            if (isLoadingRutas) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0x88000000)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = { loginViewModel.onLogOutClick() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text(stringResource(R.string.logOut))
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Button(
+                onClick = { loginViewModel.onDeleteAccountClick() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+            ) {
+                Text(stringResource(R.string.borrarCuenta))
+            }
+        }
+
+        //TODO BORRAME
+        Button(
+            //Boton de borrar cuenta
+            onClick = { loginViewModel.onDeleteAccountClick() },
+            modifier = Modifier
+                .fillMaxWidth(0.5F)
+                .padding(16.dp, 0.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.borrarCuenta),
+                fontSize = 16.sp,
+                modifier = Modifier.padding(0.dp, 6.dp)
+            )
+        }
+
+        //TODO BORRAME
+        Button(
+            //Boton de borrar cuenta
+            onClick = {
+                //loginViewModel.signOut()
+                //navController.navigate(Routes.Login)
+                // Cancelamos cualquier carga pendiente o listener aquí si es necesario
+                loginViewModel.launchCatching {
+                    loginViewModel.signOut()
+                    withContext(Dispatchers.Main) {
+                        navController.navigate(Routes.Login) {
+                            popUpTo(Routes.Main) { inclusive = true }
+                        }
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth(0.5F)
+                .padding(16.dp, 0.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.cerrarSesion),
+                fontSize = 16.sp,
+                modifier = Modifier.padding(0.dp, 6.dp)
+            )
+        }
+    }
+}
+
+// Ejemplo de formateo duración optimizado
+fun formatDuration(seconds: Int): String {
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    return if (hours > 0) "%d:%02d h".format(hours, minutes)
+    else "%d min".format(minutes)
+}
 
 /*
 @Composable
@@ -196,125 +416,6 @@ fun MainScreen(
     }
 }
 */
-
-
-@Composable
-fun MainScreen(
-    navController: NavController,
-    loginViewModel: LoginViewModel,
-    rutaViewModel: RutaViewModel
-) {
-    AppScaffold(
-        showBackArrow = false,
-        showActionButton = true,
-        botonAccion = { navController.navigate(Routes.NuevaRuta) }
-    ) {
-        val logeado by loginViewModel.logeado.observeAsState(initial = true)
-        if (!logeado) {
-            LaunchedEffect(Unit) {
-                loginViewModel.navegar { navController.navigate(Routes.Login) }
-            }
-        }
-
-        //val rutas by rutaViewModel.rutas.observeAsState(initial = emptyList())
-        val rutas = rutaViewModel.rutas.value
-        //val rutasFiltradas = remember(rutas) { rutas?.filter { it.visible && it.finalizado } }
-        val isLoadingRutas by rutaViewModel.isLoading.observeAsState(initial = false)
-        val rutaActiva by rutaViewModel.selectedRuta.observeAsState()
-        val user = loginViewModel.currentUserId
-        //val formatoFecha = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
-        var yaNavegado by remember { mutableStateOf(false) }
-
-        LaunchedEffect(user) {
-            rutaViewModel.comprobarRutaActivaDelUsuario(user)
-        }
-
-        // Navegación cuando hay ruta activa
-        LaunchedEffect(rutaActiva) {
-            if (rutaActiva != null && !yaNavegado) {
-                yaNavegado = true
-                rutaViewModel.actualizarPuedeVolver(true)
-                navController.navigate(Routes.DetallesRuta)
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.listaDeRutas),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Lista de rutas filtradas
-            val rutasFiltradas = remember(rutas) {
-                rutas?.filter { it.visible && it.finalizado }
-            }
-
-            Log.d("MainScreen", "Rutas -> $rutas")
-            Log.d("MainScreen", "Rutas filtradas -> $rutasFiltradas")
-
-            if (rutasFiltradas != null) {
-                ListaDeRutas(
-                    rutas = rutasFiltradas,
-                    /*
-                    onRutaClick = {
-                        rutaViewModel.setRuta(rutaActiva!!)
-                        navController.navigate(Routes.DetallesRuta)
-                    },
-                     */
-                    navController = navController,
-                    rutaViewModel
-                )
-            }
-
-            // Indicador de carga
-            if (isLoadingRutas) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0x88000000)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = { loginViewModel.onLogOutClick() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            ) {
-                Text(stringResource(R.string.logOut))
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Button(
-                onClick = { loginViewModel.onDeleteAccountClick() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-            ) {
-                Text(stringResource(R.string.borrarCuenta))
-            }
-        }
-    }
-}
-
-// Ejemplo de formateo duración optimizado
-fun formatDuration(seconds: Int): String {
-    val hours = seconds / 3600
-    val minutes = (seconds % 3600) / 60
-    return if (hours > 0) "%d:%02d h".format(hours, minutes)
-    else "%d min".format(minutes)
-}
 
 /*
 @Composable

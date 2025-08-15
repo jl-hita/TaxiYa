@@ -57,4 +57,5 @@
     <string name="de">De</string>
     <string name="a">A</string>
     <string name="eliminarRuta">Eliminar ruta</string>
+    <string name="cerrarSesion">Cerrar sesión</string>
 </resources>

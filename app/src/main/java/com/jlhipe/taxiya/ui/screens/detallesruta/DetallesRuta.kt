@@ -384,7 +384,7 @@ fun DetallesRuta(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    enabled = ruta.finalizado == false
+                    enabled = !ruta.finalizado && !ruta.asignado
                 ) {
                     Text(stringResource(R.string.cancelarRuta))
                 }

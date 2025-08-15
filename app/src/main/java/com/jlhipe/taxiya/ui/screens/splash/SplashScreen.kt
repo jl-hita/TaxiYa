@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -21,12 +22,71 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.service.LoginService
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import kotlinx.coroutines.delay
 
+@Composable
+fun SplashScreen(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel
+) {
+    // Animación del logo
+    Splash()
+
+    // Observamos el estado de login desde el ViewModel
+    val logeado by loginViewModel.logeado.observeAsState()
+    val currentUser = Firebase.auth.currentUser
+
+    // Lanzamos efecto que navegará cuando Firebase Auth esté listo
+    LaunchedEffect(currentUser, logeado) {
+        // Espera mínima para que se vea la animación
+        delay(2000)
+
+        navController.popBackStack() // Evita volver a Splash
+
+        if (currentUser != null || (logeado == true)) {
+            // Usuario autenticado -> pantalla principal
+            navController.navigate(Routes.Main)
+        } else {
+            // No hay usuario -> pantalla de login
+            navController.navigate(Routes.Login)
+        }
+    }
+}
+
+@Composable
+fun Splash() {
+    var animateAlpha by rememberSaveable { mutableStateOf(false) }
+    val alpha by animateFloatAsState(
+        targetValue = if (animateAlpha) 1f else 0f,
+        animationSpec = tween(durationMillis = 2000)
+    )
+
+    LaunchedEffect(Unit) { animateAlpha = true }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(4, 174, 236)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "TaxiYa",
+            modifier = Modifier
+                .size(250.dp, 166.dp)
+                .alpha(alpha)
+        )
+    }
+}
+
+/*
 @Composable
 //fun SplashScreen(navController: NavHostController, rutaViewModel: RutaViewModel) {
 fun SplashScreen(
@@ -38,7 +98,7 @@ fun SplashScreen(
     var loginService = LoginService()
 
     LaunchedEffect(key1 = true) {
-        delay(5000)
+        delay(2000)
         navController.popBackStack() // Avoid going back to Splash Screen
         if(loginViewModel.hasUser()) navController.navigate(Routes.Main) //Si está logeado va a la página principal
         else navController.navigate(Routes.Login) //Si no está logeado se le redirige a la pantalla de login
@@ -104,3 +164,4 @@ fun Splash() {
          */
     }
 }
+ */

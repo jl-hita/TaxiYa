@@ -1,5 +1,6 @@
 package com.jlhipe.taxiya.ui.screens.login
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -7,7 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,19 +27,261 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CustomCredential
 import androidx.navigation.NavHostController
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.theme.BlueRibbon
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
+@Composable
+fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
+    val logeado by loginViewModel.logeado.observeAsState(false)
+    val email = loginViewModel.email.collectAsState()
+    val password = loginViewModel.password.collectAsState()
+    val error by loginViewModel.error.observeAsState("")
+    val usuario by loginViewModel.user.observeAsState()
+
+    //Navegar a Main si está logeado y haya usuario cargado
+    LaunchedEffect(logeado, usuario) {
+        if (logeado && usuario != null) {
+            navController.navigate(Routes.Main) {
+                popUpTo(Routes.Login) { inclusive = true }
+            }
+        }
+    }
+
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Imagen
+        Image(
+            painter = painterResource(id = R.drawable.logo_inverso),
+            contentDescription = "Auth image",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp, 4.dp)
+        )
+
+        // Email
+        OutlinedTextField(
+            value = email.value,
+            onValueChange = { loginViewModel.updateEmail(it) },
+            placeholder = { Text("Email") },
+            singleLine = true,
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(0.8f)
+        )
+
+        // Password
+        OutlinedTextField(
+            value = password.value,
+            onValueChange = { loginViewModel.updatePassword(it) },
+            placeholder = { Text("Password") },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(0.8f)
+        )
+
+        // Error
+        if (error.isNotEmpty()) {
+            Text(text = error, color = Color.Red)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Botón Login
+        Button(onClick = {
+            CoroutineScope(Dispatchers.IO).launch {
+                loginViewModel.signIn(email.value, password.value)
+            }
+        }) {
+            Text("Sign In")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Botón Registro
+        Button(onClick = {
+            navController.navigate(Routes.Registro)
+        }) {
+            Text("Sign Up")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Login con Google
+        AuthenticationButton(
+            modifier = Modifier.fillMaxWidth(0.8F),
+            buttonText = R.string.loginConGoogle,
+            //onRequestResult = { loginViewModel.setLogeado(true) }
+        ) { credential ->
+            CoroutineScope(Dispatchers.Main).launch {
+                loginViewModel.onSignInWithGoogle(credential)
+            }
+        }
+        /*
+        AuthenticationButton(
+            buttonText = R.string.loginConGoogle,
+            modifier = Modifier.fillMaxWidth(0.8f)
+        ) { credential ->
+            val bundle = (credential as? CustomCredential)?.data ?: return@AuthenticationButton
+            val idToken = bundle.getString("google.idToken") ?: return@AuthenticationButton
+
+            loginViewModel.launchCatching {
+                loginViewModel.signInWithGoogle(idToken)
+            }
+        }
+         */
+
+        //TODO BORRAME
+        Button(onClick = {
+            loginViewModel.probarLogin()
+        }) {
+            Text("Pruebame")
+        }
+    }
+}
+
+/*
+@Composable
+fun LoginScreen(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel
+) {
+    val scope = rememberCoroutineScope() // CoroutineScope para llamadas suspend
+    val context = LocalContext.current
+
+    // Observamos estado de login
+    val logeado: Boolean by loginViewModel.logeado.observeAsState(initial = false)
+    if (logeado) {
+        LaunchedEffect(logeado) {
+            loginViewModel.navegar {
+                navController.navigate(Routes.Main)
+            }
+        }
+    }
+
+    val email = loginViewModel.email.collectAsState()
+    val password = loginViewModel.password.collectAsState()
+    val error: String by loginViewModel.error.observeAsState(initial = "")
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Login con Google
+        LaunchedEffect(Unit) {
+            launchCredManBottomSheet(context) { result ->
+                scope.launch {
+                    loginViewModel.onSignInWithGoogle(result)
+                }
+            }
+        }
+
+        Image(
+            painter = painterResource(id = R.drawable.logo_inverso),
+            contentDescription = "Auth image",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp, 4.dp)
+        )
+
+        OutlinedTextField(
+            value = email.value,
+            onValueChange = { loginViewModel.updateEmail(it) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(16.dp, 4.dp)
+                .border(BorderStroke(2.dp, BlueRibbon), RoundedCornerShape(50)),
+            placeholder = { Text(stringResource(R.string.email)) },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = stringResource(R.string.email)) }
+        )
+
+        OutlinedTextField(
+            value = password.value,
+            onValueChange = { loginViewModel.updatePassword(it) },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(16.dp, 4.dp)
+                .border(BorderStroke(2.dp, BlueRibbon), RoundedCornerShape(50)),
+            placeholder = { Text(stringResource(R.string.password)) },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = stringResource(R.string.password)) }
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (error.isNotEmpty()) {
+            Text(
+                text = if (error == "The supplied auth credential is incorrect, malformed or has expired.")
+                    stringResource(R.string.errorCredenciales)
+                else error,
+                color = Color.Red
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = { loginViewModel.onSignInClick() },
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(16.dp, 0.dp)
+        ) {
+            Text(stringResource(R.string.sign_in), fontSize = 16.sp, modifier = Modifier.padding(vertical = 6.dp))
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Button(
+            onClick = { navController.navigate(Routes.Registro) },
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(16.dp, 0.dp)
+        ) {
+            Text(stringResource(R.string.sign_up_description), fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        AuthenticationButton(
+            modifier = Modifier.fillMaxWidth(0.8f),
+            buttonText = R.string.loginConGoogle
+        ) { credential ->
+            scope.launch {
+                loginViewModel.onSignInWithGoogle(credential)
+            }
+        }
+    }
+}
+*/
+
+/*
 @Composable
 fun LoginScreen(
     navController: NavHostController,
@@ -47,8 +292,6 @@ fun LoginScreen(
     if(logeado) {
         LaunchedEffect(key1 = true) { loginViewModel.navegar({ navController.navigate(Routes.Main) }) }
     }
-
-
 
     val email = loginViewModel.email.collectAsState()
     val password = loginViewModel.password.collectAsState()
@@ -67,7 +310,10 @@ fun LoginScreen(
         //Muestra el "login con google"
         LaunchedEffect(Unit) {
             launchCredManBottomSheet(context) { result ->
-                loginViewModel.onSignInWithGoogle(result)
+                //Lanzamos una coroutine para poder llamar a funciones suspend
+                launch {
+                    loginViewModel.onSignInWithGoogle(result)
+                }
             }
         }
 
@@ -188,7 +434,10 @@ fun LoginScreen(
             buttonText = R.string.loginConGoogle,
             //onRequestResult = { loginViewModel.setLogeado(true) }
         ) { credential ->
-            loginViewModel.onSignInWithGoogle(credential)
+            CoroutineScope(Dispatchers.Main).launch {
+                loginViewModel.onSignInWithGoogle(credential)
+            }
         }
     }
 }
+ */

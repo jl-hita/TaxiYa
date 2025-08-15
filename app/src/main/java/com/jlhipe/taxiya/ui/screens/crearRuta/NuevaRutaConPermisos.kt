@@ -288,7 +288,8 @@ fun NuevaRutaConPermisos(
 
                 Button(
                     onClick = {
-                        ruta.cliente = loginViewModel.currentUserId
+                        //ruta.cliente = loginViewModel.currentUserId
+                        ruta.cliente = loginViewModel.user.value!!.id
                         ruta.conductor = ""
                         ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
                         scope.launch {

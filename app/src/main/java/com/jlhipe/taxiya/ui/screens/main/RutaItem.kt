@@ -3,6 +3,7 @@ package com.jlhipe.taxiya.ui.screens.main
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -100,25 +101,30 @@ fun RutaItem(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(stringResource(R.string.distancia) + ": ")
-                    }
-                    append(distanciaKm)
-                },
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(stringResource(R.string.distancia) + ": ")
+                        }
+                        append(distanciaKm)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
 
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(stringResource(R.string.duracion) + ": ")
-                    }
-                    append(duracionFormateada)
-                },
-                style = MaterialTheme.typography.bodyMedium
-            )
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(stringResource(R.string.duracion) + ": ")
+                        }
+                        append(duracionFormateada)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
         }
     }
 }

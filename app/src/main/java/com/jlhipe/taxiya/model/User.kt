@@ -3,7 +3,7 @@ package com.jlhipe.taxiya.model
 data class User (
     val id: String  = "",               //TODO Identificador único: se genera al crear cuenta y se guarda en Firebase.auth.uid y se recupera con LoginViewModel.currentUserId
     val email: String = "",             //Email para login con email
-    val password: String ="",           //Contraseña para login con email
+    //val password: String ="",           //Contraseña para login con email
     //val identificador: String = "",   //Identificador único: se genera y se comprueba que no exista
     //val primeraVez: Boolean = true,   //¿Es la primera vez que inicia la app?
     val esConductor: Boolean = false,   //¿Es conductor? Si false es usuario
