@@ -146,6 +146,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         return try {
             val doc = Firebase.firestore.collection("usuarios").document(uid).get().await()
             _user.value = doc.toObject(User::class.java)
+            if(_user.value != null) {
+                _esConductor.value = _user.value!!.esConductor
+            }
             _user.value
         } catch (e: Exception) {
             Log.d("LoginViewModel", "Error cargando usuario desde Firestore -> ${e.message}")

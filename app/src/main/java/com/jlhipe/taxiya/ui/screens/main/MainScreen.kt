@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
+import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
 import kotlinx.coroutines.Dispatchers
@@ -50,10 +52,12 @@ import kotlinx.coroutines.withContext
 fun MainScreen(
     navController: NavController,
     loginViewModel: LoginViewModel,
-    rutaViewModel: RutaViewModel
+    rutaViewModel: RutaViewModel,
+    localizacionViewModel: LocalizacionViewModel
 ) {
     //val usuario = loginViewModel.user.value
     val user by loginViewModel.user.observeAsState()
+    val esConductor = loginViewModel.esConductor.collectAsState()
 
     AppScaffold(
         showBackArrow = false,
@@ -63,7 +67,7 @@ fun MainScreen(
                 //Mientras se carga no hay acción en el botón
             } else {
                 if(user!!.esConductor) {
-                    //TODO Navegar a BuscarClientePre
+                    navController.navigate(Routes.BuscarCliente)
                 } else {
                     navController.navigate(Routes.NuevaRuta)
                 }
@@ -102,7 +106,8 @@ fun MainScreen(
             //val userId = u.id
             //TODO: resto de la UI que necesita userId
             LaunchedEffect(user) {
-                rutaViewModel.comprobarRutaActivaDelUsuario(user!!.id)
+                rutaViewModel.comprobarRutaActivaDelUsuario(user!!.id, esConductor.value)
+                //TODO Si esConductor -> no va a detalles de la ruta que tiene asignada. Corregir eso
             }
         } ?: run {
             //Mientras se carga el usuario, podemos mostrar un ProgressIndicator
@@ -134,6 +139,18 @@ fun MainScreen(
             rutaViewModel.loadRutas()
         }
 
+        // Indicador de carga
+        if (isLoadingRutas) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x88000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -151,7 +168,11 @@ fun MainScreen(
 
             // Lista de rutas filtradas
             val rutasFiltradas = remember(rutas) {
-                rutas?.filter { it.visible && it.finalizado }
+                if(esConductor.value) {
+                    rutas.filter { it.visibleConductor && it.finalizado }
+                } else {
+                    rutas.filter { it.visibleCliente && it.finalizado }
+                }
             }
 
             Log.d("MainScreen", "Rutas -> $rutas")
@@ -160,17 +181,13 @@ fun MainScreen(
             if (rutasFiltradas != null) {
                 ListaDeRutas(
                     rutas = rutasFiltradas,
-                    /*
-                    onRutaClick = {
-                        rutaViewModel.setRuta(rutaActiva!!)
-                        navController.navigate(Routes.DetallesRuta)
-                    },
-                     */
                     navController = navController,
-                    rutaViewModel
+                    rutaViewModel,
+                    localizacionViewModel,
                 )
             }
 
+            /*
             // Indicador de carga
             if (isLoadingRutas) {
                 Box(
@@ -182,6 +199,7 @@ fun MainScreen(
                     CircularProgressIndicator()
                 }
             }
+             */
         }
 
         /*

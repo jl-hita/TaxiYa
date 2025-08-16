@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.android.gms.maps.model.LatLng
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
@@ -31,20 +32,16 @@ fun BuscarClientePre(
     localizacionViewModel: LocalizacionViewModel
 ) {
     var permisosConcedidos by remember { mutableStateOf(false) }
-    val rutaActiva by rutaViewModel.selectedRuta.observeAsState()
+    //val rutaActiva by rutaViewModel.selectedRuta.observeAsState()
     val user = loginViewModel.user.value
+    val userLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
+    /*
     LaunchedEffect(user) {
         //Comprobamos si el usuario tiene una ruta activa, sin finalizar
-        user?.id?.let { rutaViewModel.comprobarRutaActivaDelUsuario(it) }
+        user?.id?.let { rutaViewModel.cargarRutasBuscandoTaxi() }
     }
-
-    //Si hay ruta activa navegamos a DetallesRuta
-    LaunchedEffect(rutaActiva) {
-        if(rutaActiva != null) {
-            navController.navigate(Routes.DetallesRuta)
-        }
-    }
+     */
 
     RequestLocationPermissions(
         onPermissionsGranted = { permisosConcedidos = true },

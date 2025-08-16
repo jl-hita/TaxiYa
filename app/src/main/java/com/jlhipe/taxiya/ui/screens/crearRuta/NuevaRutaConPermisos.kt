@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -74,16 +75,16 @@ fun NuevaRutaConPermisos(
     //var destinationLatLng by remember { mutableStateOf<LatLng?>(null) }
     val destinoLatLng = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
-    // Estados locales
+    //Estados locales
     val userLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
     val destinoLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
-    // Cámara del mapa
+    //Cámara del mapa
     val cameraPositionState = rememberCameraPositionState()
 
     val errorAlCrearRuta = stringResource(R.string.errorAlCrearRuta)
 
-    // Cliente de localización
+    //Cliente de localización
     val locationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
     }
@@ -116,6 +117,17 @@ fun NuevaRutaConPermisos(
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(nuevaUbicacion, 15f)
             )
+        }
+    }
+
+    //Para controlar la ubicación en tiempo real
+    LaunchedEffect(Unit) {
+        localizacionViewModel.startLocationUpdates()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            localizacionViewModel.stopLocationUpdates()
         }
     }
 

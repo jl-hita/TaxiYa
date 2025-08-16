@@ -45,7 +45,7 @@
     <string name="taxiEnCaminoHaciaElCliente">Taxi en camino hacia el cliente</string>
     <string name="rutaAsignadaATaxista">Ruta asignada a taxista</string>
     <string name="pendiente">Pendiente</string>
-    <string name="detallesDeRuta">Detalles de la ruta activa</string>
+    <string name="detallesDeRuta">Detalles de la ruta</string>
     <string name="cancelarRuta">Cancelar ruta</string>
     <string name="buscandoTaxi">Buscando taxi</string>
     <string name="estado">Estado</string>
@@ -67,4 +67,24 @@
     <string name="esConductor">Es conductor</string>
     <string name="perfilDeUsuario">Perfil de Usuario</string>
     <string name="eliminarCuenta">Eliminar cuenta</string>
+    <string name="confirmarEliminacion">Confirmar eliminación</string>
+    <string name="estasSeguroEliminar">¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer</string>
+    <string name="siEliminar">Sí, eliminar</string>
+    <string name="detallesDeRutaActiva">Detalles de la ruta activa</string>
+    <string name="distanciaACliente">Distancia a cliente</string>
+    <string name="cliente">Cliente</string>
+    <string name="conductorLejosCliente">De camino hacia el cliente</string>
+    <string name="clienteLejosConductor">El conductor se dirige hacia ti</string>
+    <string name="minAprox">" min aprox"</string>
+    <string name="conductorLlegando">El conductor está llegando a tu ubicación</string>
+    <string name="llegandoACliente">Estás llegando a la ubicación del cliente</string>
+    <string name="hasLlegadoADestino">Has llegado al destino</string>
+    <string name="salir">Salir</string>
+    <string name="aceptarCliente">Aceptar cliente</string>
+    <string name="desasignarRuta">Rechazar ruta</string>
+    <string name="iniciarRuta">Iniciar ruta</string>
+    <string name="estasSeguroCancelarRuta">¿Estás seguro/a de que quieres cancelar la ruta?</string>
+    <string name="confirmarCancelar">Confirmar cancelación</string>
+    <string name="iniciarRutaHaciaDestino">He recogido al cliente</string>
+    <string name="conductorEnCamino">Conductor en camino</string>
 </resources>

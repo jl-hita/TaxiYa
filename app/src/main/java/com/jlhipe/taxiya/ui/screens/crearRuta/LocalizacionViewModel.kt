@@ -6,14 +6,27 @@ import android.app.Application
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
+import android.location.Location
+import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.Locale
@@ -41,6 +54,8 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
     private val _destinoLocation = MutableLiveData<List<LatLng>>()
     val destinoLocation: LiveData<List<LatLng>> = _destinoLocation
 
+    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
+    private var locationCallback: LocationCallback? = null
 
     init {
         setUbicacion(0.0, 0.0)
@@ -52,6 +67,36 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
             return false
         }
         return true
+    }
+
+    @SuppressLint("MissingPermission")
+    fun startLocationUpdates() {
+        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+            .setMinUpdateDistanceMeters(1f)
+            .build()
+
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.locations.firstOrNull()?.let { location ->
+                    val nuevaUbicacion = LatLng(location.latitude, location.longitude)
+                    _ubicacion.postValue(listOf(nuevaUbicacion))
+                }
+            }
+        }
+
+        fusedLocationClient.requestLocationUpdates(
+            request,
+            locationCallback!!,
+            Looper.getMainLooper()
+        )
+    }
+
+    fun stopLocationUpdates() {
+        locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
+    }
+
+    fun setUbicacion(lat: Double, lon: Double) {
+        _ubicacion.value = listOf(LatLng(lat, lon))
     }
 
     /*
@@ -67,12 +112,14 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
     }
      */
 
+    /*
     fun setUbicacion(lat: Double, lon: Double) {
         val tempUbi = mutableListOf<LatLng>()
         tempUbi.add(LatLng(lat, lon))
         //_ubicacion.value = tempUbi //Provoca java.lang.IllegalStateException: Cannot invoke setValue on a background thread
         _ubicacion.postValue(tempUbi)
     }
+     */
 
     fun setDestino(lat: Double, lon: Double) {
         val tempUbi = mutableListOf<LatLng>()

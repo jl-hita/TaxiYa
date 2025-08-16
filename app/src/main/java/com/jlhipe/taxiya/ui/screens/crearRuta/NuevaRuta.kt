@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,10 +32,11 @@ fun NuevaRuta(
     var permisosConcedidos by remember { mutableStateOf(false) }
     val rutaActiva by rutaViewModel.selectedRuta.observeAsState()
     val user = loginViewModel.user.value
+    val esConductor = loginViewModel.esConductor.collectAsState()
 
     LaunchedEffect(user) {
         //Comprobamos si el usuario tiene una ruta activa, sin finalizar
-        user?.id?.let { rutaViewModel.comprobarRutaActivaDelUsuario(it) }
+        user?.id?.let { rutaViewModel.comprobarRutaActivaDelUsuario(it, esConductor.value) }
     }
 
     //Si hay ruta activa navegamos a DetallesRuta

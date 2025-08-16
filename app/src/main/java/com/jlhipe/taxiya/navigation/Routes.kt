@@ -23,4 +23,7 @@ class Routes {
 
     @Serializable
     object PerfilUsuario
+
+    @Serializable
+    object BuscarCliente
 }

@@ -29,6 +29,8 @@ import java.util.Locale
 @Composable
 fun RutaItem(
     ruta: Ruta,
+    distancia: Long,
+    buscaTaxi: Boolean = false, //Si buscaTaxi == true -> Muestra distancia entre cliente y taxista
     onClick: () -> Unit
 ) {
     val distanciaKm = remember(ruta.distancia) {
@@ -58,44 +60,39 @@ fun RutaItem(
         }
 
         Column(modifier = Modifier.padding(16.dp)) {
-            /*
-            Text("Origen: ${ruta.origen}", fontWeight = FontWeight.Bold)
-            Text("Destino: ${ruta.destino}")
-            Text("Distancia: $distanciaKm")
-            Text("Duración: $duracionFormateada")
-             */
-            /*
-            Text(
-                text = "${ruta.origen} → ${ruta.destino}",
-                style = MaterialTheme.typography.titleMedium
-            )
-             */
-            /*
-            Text(
-                text = stringResource(R.string.de) +": ${ruta.origen}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = stringResource(R.string.a) +": ${ruta.destino}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = stringResource(R.string.distancia) +": $distanciaKm",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = stringResource(R.string.duracion) +": $duracionFormateada",
-                style = MaterialTheme.typography.bodyMedium
-            )
-             */
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(formatoFecha.format(Date(ruta.fechaCreacion!!)))
-                    }
-                },
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if(buscaTaxi) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append(formatoFecha.format(Date(ruta.fechaCreacion!!)))
+                            }
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append(stringResource(R.string.distanciaACliente))
+                            }
+                            append("%.1f km".format(distancia.toDouble() / 1000))
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            } else {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(formatoFecha.format(Date(ruta.fechaCreacion!!)))
+                        }
+                    },
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {

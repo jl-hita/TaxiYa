@@ -151,8 +151,8 @@ fun PerfilUsuarioScreen(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("Confirmar eliminación") },
-                text = { Text("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.") },
+                title = { Text(stringResource(R.string.confirmarEliminacion)) }, //"Confirmar eliminación"
+                text = { Text(stringResource(R.string.estasSeguroEliminar)) }, //"¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer."
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -160,12 +160,12 @@ fun PerfilUsuarioScreen(
                             loginViewModel.eliminarCuentaYDatos()
                         }
                     ) {
-                        Text("Sí, eliminar", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.siEliminar), color = MaterialTheme.colorScheme.error) //"Sí, eliminar"
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDialog = false }) {
-                        Text("Cancelar")
+                        Text(stringResource(R.string.cancelar))
                     }
                 }
             )
