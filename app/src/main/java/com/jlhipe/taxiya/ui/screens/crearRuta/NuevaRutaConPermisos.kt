@@ -46,6 +46,7 @@ import com.google.maps.android.compose.Marker
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
 import com.jlhipe.taxiya.navigation.Routes
+import com.jlhipe.taxiya.ui.theme.BlueRibbon
 import com.jlhipe.taxiya.ui.theme.screens.layout.AppScaffold
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -159,7 +160,7 @@ fun NuevaRutaConPermisos(
             .debounce(500)
             .collectLatest { text ->
                 if (text.isNotBlank()) {
-                    val coords = rutaViewModel.obtenerCoordenadas(text, context)
+                    val coords = rutaViewModel.obtenerCoordenadas(text, context, mapssdkkey)
                     coords?.let {
                         destinoLatLng.value = LatLng(it.latitude, it.longitude)
                         ruta.destinoGeo = GeoPoint(it.latitude, it.longitude)
@@ -241,7 +242,8 @@ fun NuevaRutaConPermisos(
                     modifier = Modifier
                         .align(Alignment.BottomCenter) // Abajo centrado
                         .padding(16.dp)
-                        .background(Color.Blue, shape = RoundedCornerShape(8.dp)),
+                        //.background(Color.Blue/*, shape = RoundedCornerShape(8.dp) */),
+                        .background(BlueRibbon)
                     /*
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Blue,      // 👈 Fondo del botón

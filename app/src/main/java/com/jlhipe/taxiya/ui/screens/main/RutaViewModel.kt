@@ -301,7 +301,7 @@ class RutaViewModel: ViewModel() {
 
     //Carga la ruta especificada de firebase en la ruta seleccionada
     private fun loadRutaFromFirebase(rutaId: String) {
-        val currentUser = Firebase.auth.currentUser ?: return
+        //val currentUser = Firebase.auth.currentUser ?: return
 
         val db = FirebaseFirestore.getInstance()
         db.collection("rutas").document(rutaId)
@@ -639,33 +639,45 @@ class RutaViewModel: ViewModel() {
         }
     }
 
-    //Elimina la ruta seleccionada -> Lo que hace es marcarla como no visible para quien la "elimina" pero seguirá en la BBDD
+    //
+    /**
+     * Elimina la ruta seleccionada -> Lo que hace es marcarla como no visible para quien la "elimina" pero seguirá en la BBDD
+     * Primero averiguamos si el otro usuario implicado la tiene marcada como no visible
+     * Si los dos la marcan como no visible se elimina por completo
+     */
     fun eliminarRuta(rutaId: String, esConductor: Boolean) {
         val campo = if(esConductor) "visibleConductor" else "visibleCliente"
+        val otroCampo = if(esConductor) "visibleCliente" else "visibleConductor"
 
         viewModelScope.launch {
             try {
-                /*
-                val db = FirebaseFirestore.getInstance()
-                db.collection("rutas")
-                    .document(rutaId)
-                    .delete()
+                //Comprobamos si el otro usuario ha eliminado la ruta por su lado
+                val doc = FirebaseFirestore.getInstance().collection("rutas").document(rutaId)
+                    .get()
                     .await()
-                 */
-                FirebaseFirestore.getInstance()
-                    .collection("rutas")
-                    .document(rutaId)
-                    .update(
-                        campo, false
-                        /*
-                        mapOf(
-                            campo to false,
-                            "finalizado" to true, //Seguramente no será necesario modificar finalizado ni cancelada
-                            "cancelada" to true
+
+                val borrarRuta = doc.exists() && (doc.getBoolean(otroCampo) == false)
+
+                if(borrarRuta) {
+                    //Borramos por completo la ruta de firebase
+                    FirebaseFirestore.getInstance()
+                        .collection("rutas")
+                        .document(rutaId)
+                        .delete()
+                        .await()
+
+                    //Deselccionamos ruta seleccionada
+                    _selectedRuta.value = null
+                } else {
+                    //Ocultamos la ruta para el usuario que llama la función
+                    FirebaseFirestore.getInstance()
+                        .collection("rutas")
+                        .document(rutaId)
+                        .update(
+                            campo, false
                         )
-                         */
-                    )
-                Log.d("RutaViewModel", "Ruta $rutaId eliminada")
+                        .await()
+                }
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
             }

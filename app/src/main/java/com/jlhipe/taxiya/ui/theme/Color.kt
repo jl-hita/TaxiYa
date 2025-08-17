@@ -2,6 +2,13 @@ package com.jlhipe.taxiya.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val RutaCancelada = Color(0xFFFF2800)
+val RutaExitosa = Color(0xFF3DBD3E)
+val RutaExitosaLigero = Color(0xFF4BCE4B)
+val RutaEnMarcha = Color(0xFF20C1FB)
+val RutaDesasignar = Color(0xFFFF8700)
+val BlueClarito = Color(0xFFBFE6F3)
+
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

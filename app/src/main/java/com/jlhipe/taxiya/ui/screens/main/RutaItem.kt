@@ -22,6 +22,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
+import com.jlhipe.taxiya.ui.theme.RutaCancelada
+import com.jlhipe.taxiya.ui.theme.RutaEnMarcha
+import com.jlhipe.taxiya.ui.theme.RutaExitosa
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,13 +42,26 @@ fun RutaItem(
     val duracionFormateada = remember(ruta.duracion) {
         formatDuration(ruta.duracion)
     }
-    val backgroundColor = if (!ruta.cancelada) {
-        Log.d("RutaItem", "Ruta NO CANCELADA")
-        Color(0xFFD0F0C0) // verde claro
-    } else {
+
+    val backgroundColor = if(ruta.finalizado && ruta.cancelada) RutaCancelada
+        else if(ruta.finalizado /* && ruta.enDestino*/) RutaExitosa
+        else if(!ruta.finalizado) RutaEnMarcha
+        else Color.White
+
+    /*
+    val backgroundColor = if (!ruta.finalizado) {
+        //Color(0xFFD0F0C0) // verde claro
+        RutaEnMarcha
+    } else if (ruta.cancelada) {
         Log.d("RutaItem", "Ruta CANCELADA")
-        Color(0xFFFFC0C0) // rojo claro
+        //Color(0xFFFFC0C0) // rojo claro
+        RutaCancelada
+    } else if (ruta.enDestino) {
+        RutaExitosa
+    } else {
+        Color.White
     }
+     */
 
     Card(
         modifier = Modifier

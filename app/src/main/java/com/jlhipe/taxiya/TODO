@@ -19,3 +19,7 @@
                         -> Cuando se marque como inactivo aparecerá un resumen de km realizados ese día
 - Screen historial rutas ->
 - Screen nueva petición ruta ->
+
+
+//TODO El mapa de detallesRuta debe mostrar TAMBIEN el destino
+//TODO Que cuando no se usa AppScaffold se muestre el logo TaxiYa peque arriba
