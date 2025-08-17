@@ -66,8 +66,8 @@ import java.util.Locale
 import kotlin.math.log
 
 @Composable
-fun RutaInfoItem(label: String, value: String) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+fun RutaInfoItem(label: String, value: String, modifier: Modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
         Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
         Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -101,6 +101,17 @@ fun DetallesRuta(
     val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
     var showDialog by remember { mutableStateOf(false) }
 
+    var cliente by remember { mutableStateOf<String?>(null) }
+
+    val clientePos = remember(rutaActiva) {
+        mutableStateOf(LatLng(rutaActiva?.origenGeo?.latitude ?: 0.0,
+            rutaActiva?.origenGeo?.longitude ?: 0.0))
+    }
+    val conductorPos = remember(rutaActiva) {
+        mutableStateOf(LatLng(rutaActiva?.posicionConductor?.latitude ?: 0.0,
+            rutaActiva?.posicionConductor?.longitude ?: 0.0))
+    }
+
     //val puedeVolver by rutaViewModel.puedeVolver.observeAsState()
     //val puedeVolver by rutaViewModel.puedeVolver.observeAsState(initial = false)
 
@@ -115,8 +126,10 @@ fun DetallesRuta(
         ubicacionActualizada?.firstOrNull()?.let { nuevaUbicacion ->
             if(esConductor.value) {
                 rutaViewModel.cambiaUbicacionConductor(nuevaUbicacion)
+                conductorPos.value = nuevaUbicacion
             } else {
                 rutaViewModel.cambiaUbicacionCliente(nuevaUbicacion)
+                clientePos.value = nuevaUbicacion
             }
         }
     }
@@ -210,13 +223,39 @@ fun DetallesRuta(
                     RutaInfoItem(stringResource(R.string.origen), ruta.origen)
                     RutaInfoItem(stringResource(R.string.destino), ruta.destino)
 
-                    if (ruta.haciaDestino || ruta.finalizado) {
+                    if (ruta.finalizado) {
                         ruta.momentoSalida?.let {
                             RutaInfoItem(
                                 stringResource(R.string.salida),
                                 formatoFecha.format(Date(it * 1000))
                             )
                         }
+                    }
+
+                    //Si el usuario es conductor se muestra el nombre del cliente
+                    if(esConductor.value) {
+                        LaunchedEffect(ruta.cliente) {
+                            cliente = loginViewModel.getNombreUser(ruta.cliente)
+                        }
+
+                        RutaInfoItem(
+                            stringResource(R.string.cliente),
+                            cliente ?: "Sin Nombre"
+                        )
+                    }
+
+                    //Si el usuario es cliente se muestra el nombre del conductor
+                    if (!esConductor.value && ruta.asignado && !ruta.conductor.isNullOrBlank()) {
+                        var conductor by remember { mutableStateOf<String?>(null) }
+
+                        LaunchedEffect(ruta.conductor) {
+                            conductor = loginViewModel.getNombreUser(ruta.conductor!!)
+                        }
+
+                        RutaInfoItem(
+                            stringResource(R.string.conductor),
+                            conductor ?: "Sin Nombre"
+                        )
                     }
 
                     if (ruta.finalizado && ruta.momentoLlegada != null) {
@@ -232,6 +271,26 @@ fun DetallesRuta(
                         )
                     }
 
+                    //Duración y Distancia en la misma fila
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        ruta.duracion?.let {
+                            RutaInfoItem(
+                                stringResource(R.string.duracion),
+                                rutaViewModel.formatDuration(it.toInt()),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        RutaInfoItem(
+                            stringResource(R.string.distancia),
+                            "%.1f km".format(ruta.distancia.toDouble() / 1000),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    /*
                     ruta.duracion?.let {
                         RutaInfoItem(
                             stringResource(R.string.duracion),
@@ -243,6 +302,7 @@ fun DetallesRuta(
                         stringResource(R.string.distancia),
                         "%.1f km".format(ruta.distancia.toDouble() / 1000)
                     )
+                     */
 
                     RutaInfoItem(
                         stringResource(R.string.estado),
@@ -257,19 +317,21 @@ fun DetallesRuta(
                 }
             }
 
-            //Mostrar mapa si asignado y haciaCliente son true
-            if (!ruta.finalizado && ruta.asignado && ruta.haciaCliente) {
+            //Spacer(Modifier.height(24.dp))
+
+            //Mostrar mapa si asignado y va hacia cliente o destino
+            if (!ruta.finalizado && ruta.asignado && (ruta.haciaCliente || ruta.haciaDestino)) {
                 Spacer(Modifier.height(24.dp))
 
-                val clientePos = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
-                val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
+                //val clientePos = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
+                //val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
                 val cameraPositionState = rememberCameraPositionState()
 
                 // Ajustar cámara para que se vean ambos puntos
                 LaunchedEffect(clientePos, conductorPos) {
                     val bounds = LatLngBounds.builder()
-                        .include(clientePos)
-                        .include(conductorPos)
+                        .include(clientePos.value)
+                        .include(conductorPos.value)
                         .build()
                     cameraPositionState.animate(
                         update = CameraUpdateFactory.newLatLngBounds(bounds, 100)
@@ -299,48 +361,57 @@ fun DetallesRuta(
                         cameraPositionState = cameraPositionState
                     ) {
                         Marker(
-                            position = clientePos,
+                            position = clientePos.value,
                             title = titleCliente,
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
                         )
                         Marker(
-                            position = conductorPos,
+                            position = conductorPos.value,
                             title = titleConductor,
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
                         )
                         Marker(
-                            position = conductorPos,
+                            position = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude),
                             title = stringResource(R.string.destino),
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                         )
                     }
                 }
 
-                Spacer(Modifier.height(8.dp))
+                if ((!esConductor.value && !ruta.finalizado && ruta.haciaCliente && !ruta.haciaDestino) ||
+                    (esConductor.value && ruta.asignado && ruta.conductor == user!!.id && !ruta.finalizado && ruta.haciaCliente && !ruta.haciaDestino)) {
+                    Spacer(Modifier.height(8.dp))
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(
-                            text = "Distancia hasta el cliente: %.1f km".format(ruta.distanciaConductor / 1000f),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = "Tiempo estimado: ${rutaViewModel.formatDuration(ruta.duracionConductor)}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                    val mensajeDistanciaConductorCliente = if(esConductor.value) stringResource(R.string.distanciaHastaCliente) else stringResource(R.string.conductorEstaA)
+                    val mensajeTiempoConductorCliente = if(esConductor.value) stringResource(R.string.tiempoEstimado) else stringResource(R.string.llegaraEn)
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = mensajeDistanciaConductorCliente+": %.1f km".format(ruta.distanciaConductor / 1000f),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = mensajeTiempoConductorCliente+": ${rutaViewModel.formatDuration(ruta.duracionConductor)}",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
                     }
                 }
             }
 
             /**
              * Botón de cancelar ruta
-             * La podrá cancelar el cliente cuando no esté finalizada
-             * La podrá cancelar el conductor cuando la tenga asignada y no haya finalizado
+             * La podrá cancelar el cliente cuando no esté finalizada && no haciaCliente no haciaDestino
+             * La podrá cancelar el conductor cuando la tenga asignada y no haya finalizado && (haciaCliente || haciaDestino)
              */
-            if ((!esConductor.value && !ruta.finalizado) || (esConductor.value && ruta.conductor == user!!.id)) {
+            if ((!esConductor.value && !ruta.finalizado && !ruta.haciaCliente && !ruta.haciaDestino) ||
+                (esConductor.value && ruta.asignado && ruta.conductor == user!!.id && !ruta.finalizado && (ruta.haciaCliente || ruta.haciaDestino))) {
+                Spacer(Modifier.height(24.dp))
+
                 Button(
                     onClick = { showDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -430,7 +501,7 @@ fun DetallesRuta(
             /**
              * Botón de desasignar ruta
              */
-            if(esConductor.value && !ruta.finalizado && !ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino) {
+            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaCliente && !ruta.haciaDestino) {
                 Spacer(Modifier.height(24.dp))
 
                 Button(
@@ -445,15 +516,14 @@ fun DetallesRuta(
                     //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
                     //enabled = ruta.finalizado == false
                 ) {
-                    Text(stringResource(R.string.desasignarRuta))
+                    Text(stringResource(R.string.rechazarRuta))
                 }
             }
-                Spacer(Modifier.height(24.dp))
 
             /**
-             * Botón de iniciar ruta
+             * Botón de iniciar ruta hacia cliente
              */
-            if(esConductor.value && !ruta.finalizado && !ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && !ruta.haciaCliente) {
+            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && !ruta.haciaCliente) {
                 Spacer(Modifier.height(24.dp))
 
                 Button(
@@ -466,7 +536,7 @@ fun DetallesRuta(
                         //navController.navigate(Routes.Main)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
                     //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
                     //enabled = ruta.finalizado == false
                 ) {
@@ -477,7 +547,7 @@ fun DetallesRuta(
             /**
              * Botón de ir hacia destino
              */
-            if(esConductor.value && !ruta.finalizado && !ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && ruta.haciaCliente) {
+            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && ruta.haciaCliente) {
                 Spacer(Modifier.height(24.dp))
 
                 Button(
@@ -500,7 +570,7 @@ fun DetallesRuta(
              * Indicamos de forma visual que el conductor se dirige hacia el cliente y tiempo aproximado (ruta.duracionConductor)
              * TODO Plantear cambiar condición de distancia a tiempo
              */
-            if(!esConductor.value && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor >= 500) {
+            if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor >= 500) {
                 Spacer(Modifier.height(24.dp))
 
                 Row(
@@ -533,7 +603,7 @@ fun DetallesRuta(
              * Indicar de forma visual que el conductor está llegando a la posición del cliente
              * TODO Plantear cambiar condición de distancia a tiempo
              */
-            if(!esConductor.value && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor < 500) {
+            if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor < 500) {
                 Spacer(Modifier.height(24.dp))
 
                 Row(
@@ -561,6 +631,27 @@ fun DetallesRuta(
             }
 
             /**
+             * Botón de marcar que se ha llegado al destino
+             */
+            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && ruta.haciaDestino && !ruta.enDestino) {
+                Spacer(Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        Log.d("DetallesRuta", "Llegando a destino")
+                        //localizacionViewModel.stopLocationUpdates()
+                        rutaViewModel.comprobarSiLlegaADestino(forzar = true)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
+                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
+                    //enabled = ruta.finalizado == false
+                ) {
+                    Text(stringResource(R.string.heLlegadoAlDestino), color = Color.Black)
+                }
+            }
+
+            /**
              * El conductor ha llegado al destino
              *
              * TODO check -> Otro if que controle que el conductor ha llegado a destino con la variable ruta.distanciaDestino < 50
@@ -576,7 +667,7 @@ fun DetallesRuta(
              *  - check -> Mostrar botón para volver a MainScreen
              */
             //if(ruta.finalizado && ruta.asignado && ruta.distanciaDestino < 50) {
-            if(ruta.finalizado && !ruta.cancelada && ruta.asignado && ruta.enDestino) {
+            if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && ruta.finalizado && !ruta.cancelada && ruta.asignado && ruta.enDestino) {
                 Spacer(Modifier.height(24.dp))
 
                 //Indicar de forma visual que el conductor/cliente ha llegado al destino

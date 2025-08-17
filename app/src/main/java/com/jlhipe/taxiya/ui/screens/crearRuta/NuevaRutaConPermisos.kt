@@ -1,17 +1,23 @@
 package com.jlhipe.taxiya.ui.screens.crearRuta
 
 import android.Manifest
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import androidx.annotation.RequiresPermission
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
@@ -24,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -174,6 +181,95 @@ fun NuevaRutaConPermisos(
         navController = navController,
     ) {
         if (localizacionViewModel.tienePermisosGPS()) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // 🌍 Mapa ocupa todo el espacio
+                GoogleMap(
+                    modifier = Modifier.matchParentSize(),
+                    cameraPositionState = cameraPositionState,
+                    onMapClick = { clickedLocation ->
+                        destinoLocation.value = clickedLocation
+                        localizacionViewModel.setDestino(clickedLocation.latitude, clickedLocation.longitude)
+                        scope.launch {
+                            ruta.destinoGeo = GeoPoint(clickedLocation.latitude, clickedLocation.longitude)
+                            //TODO Revisar este cambio
+                            //ruta.destino = rutaViewModel.obtenerDireccion(ruta.destinoGeo, context)
+                            ruta.destino = rutaViewModel.obtenerDireccion(GeoPoint(clickedLocation.latitude, clickedLocation.longitude), context, mapssdkkey)//suspend fun obtenerDireccion(latLng: GeoPoint, context: Context, googleApiKey: String): String {
+                            destinationText.value = ruta.destino
+                            cameraPositionState.animate(CameraUpdateFactory.newLatLng(clickedLocation))
+                        }
+                    }
+                ) {
+                    Marker(position = userLocation.value, title = stringResource(R.string.tu))
+                    Marker(position = destinoLocation.value, title = stringResource(R.string.destino))
+                }
+
+                //TextField para escribir dirección
+                OutlinedTextField(
+                    value = destinationText.value,
+                    onValueChange = { destinationText.value = it },
+                    label = { Text(stringResource(R.string.destino)) },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter) // Arriba centrado
+                        .padding(16.dp)
+                        .background(Color.White, shape = RoundedCornerShape(8.dp))
+                        .fillMaxWidth(0.9f)
+                )
+
+                //Botón para crear ruta
+                Button(
+                    onClick = {
+                        ruta.cliente = loginViewModel.user.value!!.id
+                        ruta.conductor = ""
+                        ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
+                        scope.launch {
+                            //TODO Revisar este cambio
+                            //ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context)
+                            ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context, mapssdkkey)
+                            val idInsertada = rutaViewModel.insertaRutaFirebase(ruta, routesApiKey)
+                            if (idInsertada != null) {
+                                rutaViewModel.actualizarPuedeVolver(false)
+                                navController.navigate(Routes.DetallesRuta)
+                            } else {
+                                destinationText.value = errorAlCrearRuta
+                                delay(2000)
+                                navController.navigate(Routes.Main)
+                            }
+                        }
+                    },
+                    enabled = userLocation.value != LatLng(0.0, 0.0) &&
+                            (ruta.destinoGeo != GeoPoint(0.0, 0.0) || ruta.destino.isNotBlank()),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter) // Abajo centrado
+                        .padding(16.dp)
+                        .background(Color.Blue, shape = RoundedCornerShape(8.dp)),
+                    /*
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Blue,      // 👈 Fondo del botón
+                        contentColor = Color.White         // 👈 Texto/Iconos en blanco
+                    )
+                     */
+                ) {
+                    Text(text = stringResource(R.string.buscaTaxiLibre))
+                }
+            }
+        } else {
+            Text(
+                text = stringResource(R.string.necesitaPermisos),
+                modifier = Modifier.padding(32.dp)
+            )
+        }
+    }
+
+    /*
+    AppScaffold(
+        showBackArrow = true,
+        onBlackArrowClick = { navController.popBackStack() },
+        showActionButton = false,
+        botonAccion = { navController.navigate(Routes.NuevaRuta) },
+        loginViewModel = loginViewModel,
+        navController = navController,
+    ) {
+        if (localizacionViewModel.tienePermisosGPS()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -219,7 +315,8 @@ fun NuevaRutaConPermisos(
                         ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
                         scope.launch {
                             ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context)
-                            val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta, routesApiKey)
+                            //val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta, routesApiKey)
+                            val idInsertada = rutaViewModel.insertaRutaFirebase(ruta, routesApiKey)
                             if (idInsertada != null) {
                                 rutaViewModel.actualizarPuedeVolver(false)
                                 navController.navigate(Routes.DetallesRuta)
@@ -244,4 +341,5 @@ fun NuevaRutaConPermisos(
             )
         }
     }
+    */
 }

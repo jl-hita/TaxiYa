@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-08-16T22:14:44.052624100Z">
+        <DropdownSelection timestamp="2025-08-17T14:46:59.396164300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Joso\.android\avd\Taxista_Pixel_9_Pro_XL_API_35.avd" />

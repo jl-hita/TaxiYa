@@ -81,10 +81,16 @@
     <string name="hasLlegadoADestino">Has llegado al destino</string>
     <string name="salir">Salir</string>
     <string name="aceptarCliente">Aceptar cliente</string>
-    <string name="desasignarRuta">Rechazar ruta</string>
+    <string name="rechazarRuta">Rechazar ruta</string>
     <string name="iniciarRuta">Iniciar ruta</string>
     <string name="estasSeguroCancelarRuta">¿Estás seguro/a de que quieres cancelar la ruta?</string>
     <string name="confirmarCancelar">Confirmar cancelación</string>
     <string name="iniciarRutaHaciaDestino">He recogido al cliente</string>
     <string name="conductorEnCamino">Conductor en camino</string>
+    <string name="noHayRutas">No hay ninguna ruta</string>
+    <string name="distanciaHastaCliente">Distancia hasta el cliente</string>
+    <string name="conductorEstaA">El conductor está a</string>
+    <string name="tiempoEstimado">Tiempo estimado</string>
+    <string name="llegaraEn">Llegará en</string>
+    <string name="heLlegadoAlDestino">He llegado al destino</string>
 </resources>

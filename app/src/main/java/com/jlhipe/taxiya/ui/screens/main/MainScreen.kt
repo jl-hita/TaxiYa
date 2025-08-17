@@ -119,12 +119,6 @@ fun MainScreen(
             }
         }
 
-        /*
-        LaunchedEffect(user) {
-            rutaViewModel.comprobarRutaActivaDelUsuario(user!!.id)
-        }
-        */
-
         // Navegación cuando hay ruta activa
         LaunchedEffect(rutaActiva) {
             if (rutaActiva != null && !yaNavegado) {
@@ -178,73 +172,17 @@ fun MainScreen(
             Log.d("MainScreen", "Rutas -> $rutas")
             Log.d("MainScreen", "Rutas filtradas -> $rutasFiltradas")
 
-            if (rutasFiltradas != null) {
+            if (rutasFiltradas.isNotEmpty()) {
                 ListaDeRutas(
                     rutas = rutasFiltradas,
                     navController = navController,
                     rutaViewModel,
                     localizacionViewModel,
                 )
+            } else {
+                Text(stringResource(R.string.noHayRutas))
             }
-
-            /*
-            // Indicador de carga
-            if (isLoadingRutas) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0x88000000)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-             */
         }
-
-        /*
-        //TODO BORRAME
-        Button(
-            //Boton de borrar cuenta
-            onClick = { loginViewModel.onDeleteAccountClick() },
-            modifier = Modifier
-                .fillMaxWidth(0.5F)
-                .padding(16.dp, 0.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.borrarCuenta),
-                fontSize = 16.sp,
-                modifier = Modifier.padding(0.dp, 6.dp)
-            )
-        }
-
-        //TODO BORRAME
-        Button(
-            //Boton de borrar cuenta
-            onClick = {
-                //loginViewModel.signOut()
-                //navController.navigate(Routes.Login)
-                // Cancelamos cualquier carga pendiente o listener aquí si es necesario
-                loginViewModel.launchCatching {
-                    loginViewModel.signOut()
-                    withContext(Dispatchers.Main) {
-                        navController.navigate(Routes.Login) {
-                            popUpTo(Routes.Main) { inclusive = true }
-                        }
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth(0.5F)
-                .padding(16.dp, 0.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.cerrarSesion),
-                fontSize = 16.sp,
-                modifier = Modifier.padding(0.dp, 6.dp)
-            )
-        }
-         */
     }
 }
 

@@ -269,7 +269,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun onSignInWithGoogle(credential: Credential) {
         if (credential is CustomCredential &&
-            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
 
             val googleIdTokenCredential =
@@ -311,6 +311,23 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun deleteAccount() {
         Firebase.auth.currentUser!!.delete().await()
         _logeado.postValue(false)
+    }
+
+    suspend fun getNombreUser(id: String): String? {
+        return try {
+            val snapshot = Firebase.firestore
+                .collection("usuarios")
+                .document(id)
+                .get()
+                .await()
+            val nombre: String? = snapshot.getString("nombre")
+            if(nombre.isNullOrBlank())
+                "SinNombre"
+            else
+                nombre
+        } catch (e: Exception) {
+            null
+        }
     }
 }
 

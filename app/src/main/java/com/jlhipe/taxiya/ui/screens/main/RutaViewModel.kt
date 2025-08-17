@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -41,7 +42,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 import java.util.Date
+import kotlinx.coroutines.withContext
 
 class RutaViewModel: ViewModel() {
     //Lista de rutas
@@ -231,9 +234,9 @@ class RutaViewModel: ViewModel() {
     }
 
     //Cuando la distancia Conductor/Cliente y destino sea menor a 25 metros se inicia ruta hacia destino
-    fun comprobarSiLlegaADestino() {
+    fun comprobarSiLlegaADestino(forzar: Boolean = false) {
         selectedRuta.value?.let {
-            if (!it.finalizado && it.asignado && it.haciaDestino && it.distanciaDestino < 25) {
+            if (forzar || (!it.finalizado && it.asignado && it.haciaDestino && it.distanciaDestino < 25)) {
                 it.haciaDestino = false
                 it.enDestino = true
                 it.finalizado = true
@@ -305,7 +308,8 @@ class RutaViewModel: ViewModel() {
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    _selectedRuta.value = doc.toObject(Ruta::class.java)
+                    val ruta = doc.toObject(Ruta::class.java)
+                    _selectedRuta.value = ruta
                 }
             }
     }
@@ -481,7 +485,7 @@ class RutaViewModel: ViewModel() {
 
     //Calcula datos de una ruta nueva
     suspend fun insertaRutaFirebase(
-        apiKey: String,
+        //apiKey: String,
         ruta: Ruta,
         routesApiKey: String
     ): String? = try {
@@ -520,7 +524,7 @@ class RutaViewModel: ViewModel() {
     }
 
     fun getRuta(documentId: String): Ruta {
-        val currentUser = Firebase.auth.currentUser ?: return Ruta()
+        //val currentUser = Firebase.auth.currentUser ?: return Ruta()
 
         var ruta = Ruta()
 
@@ -553,7 +557,7 @@ class RutaViewModel: ViewModel() {
 
     //Otra forma de comprobar si el usuario tiene rutas activas
     fun comprobarRutaActivaDelUsuario(userId: String, esConductor: Boolean) {
-        val currentUser = Firebase.auth.currentUser ?: return
+        //val currentUser = Firebase.auth.currentUser ?: return
 
         if (!esConductor) {
             viewModelScope.launch {
@@ -672,11 +676,17 @@ class RutaViewModel: ViewModel() {
     fun asignarRuta(rutaId: String, user: User, routesApiKey: String) {
         viewModelScope.launch {
             try {
+                //Hacemos que no puedan salir de DetallesRuta
+                actualizarPuedeVolver(false)
+
                 //Calculamos cuanto va a tardar el conductor en llegar al cliente
                 val (distancia, duracion) = getDistanceAndDuration(selectedRuta.value!!.origenGeo, selectedRuta.value!!.destinoGeo, routesApiKey)
                 selectedRuta.value!!.duracionConductor = duracion
 
                 Log.d("RutaViewModel", "Duración del trayecto conductor -> cliente = $duracion")
+
+                //Modificamos ruta.duracion <- sumamos el tiempo que tardará el conductor en llegar
+                val duracionFinal = selectedRuta.value!!.duracion + duracion
 
                 val db = FirebaseFirestore.getInstance()
                 db.collection("rutas")
@@ -685,7 +695,8 @@ class RutaViewModel: ViewModel() {
                         mapOf(
                             "conductor" to user.id,
                             "asignado" to true,
-                            "duracionConductor" to duracion
+                            "duracionConductor" to duracion,
+                            "duracion" to duracionFinal
                         )
                     )
                     .await()
@@ -830,11 +841,48 @@ class RutaViewModel: ViewModel() {
     }
 
     //Traduce de coordenadas a dirección
+    suspend fun obtenerDireccion(latLng: GeoPoint, context: Context, googleApiKey: String): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+
+                // API 33+ tiene versión suspend
+                val addresses = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+                } else {
+                    // Versión clásica para APIs < 33
+                    @Suppress("DEPRECATION")
+                    geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+                }
+
+                addresses?.firstOrNull()?.getAddressLine(0)
+                    ?: obtenerDireccionGoogleMaps(latLng, googleApiKey) // fallback
+            } catch (e: IOException) {
+                // fallback a Google Maps API si Geocoder falla
+                obtenerDireccionGoogleMaps(latLng, googleApiKey)
+            }
+        }
+    }
+
+    private fun obtenerDireccionGoogleMaps(latLng: GeoPoint, apiKey: String): String {
+        return try {
+            val urlStr = "https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey"
+            val response = URL(urlStr).readText()
+            val json = JSONObject(response)
+            val results = json.getJSONArray("results")
+            if (results.length() > 0) results.getJSONObject(0).getString("formatted_address")
+            else "Dirección desconocida"
+        } catch (e: Exception) {
+            "Dirección no disponible"
+        }
+    }
+    /*
     fun obtenerDireccion(latLng: GeoPoint, context: Context): String {
         val geocoder = Geocoder(context, Locale.getDefault())
         val direcciones = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
         return direcciones?.firstOrNull()?.getAddressLine(0) ?: "Dirección desconocida"
     }
+     */
 
     //Traduce de dirección a coordenadas
     fun obtenerCoordenadas(direccion: String, context: Context): LatLng? {

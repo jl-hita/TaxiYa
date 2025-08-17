@@ -69,7 +69,7 @@ fun RutaItem(
                             }
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(0.8f)
                     )
                     Text(
                         text = buildAnnotatedString {
@@ -79,7 +79,7 @@ fun RutaItem(
                             append("%.1f km".format(distancia.toDouble() / 1000))
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1.2f)
                     )
                 }
             } else {
