@@ -316,7 +316,8 @@ class RutaViewModel: ViewModel() {
                     val distancia: Long = calcularDistancia(conductorPos, destinoPos)
 
                     // Crear copia actualizada de la ruta
-                    val updatedRuta = ruta.copy(distanciaConductor = distancia)
+                    //val updatedRuta = ruta.copy(distanciaConductor = distancia)
+                    val updatedRuta = ruta.copy(distancia = distancia)
 
                     //Actualizamos en firebase
                     actualizaDistanciaConductorDestino(distancia)

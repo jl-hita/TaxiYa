@@ -324,9 +324,10 @@ fun DetallesRuta(
                             formatoFecha.format(Date(ruta.momentoLlegada!! * 1000))
                         )
                     //} else if (ruta.haciaDestino && ruta.momentoSalida != null && ruta.duracion != null) {
-                    } else if((ruta.haciaCliente || ruta.haciaDestino) && ruta.momentoSalida != null) {
+                    } else if(ruta.haciaCliente || ruta.haciaDestino) {
                         //val estimada = Date((ruta.momentoSalida!! + ruta.duracion.toLong()) * 1000)
-                        val estimada = Date((ruta.momentoSalida!!.toLong() + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
+                        //val estimada = Date((ruta.momentoSalida!!.toLong() + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
+                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
                         RutaInfoItem(
                             stringResource(R.string.horaEstimadaLlegada),
                             formatoFecha.format(estimada)
