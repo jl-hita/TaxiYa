@@ -840,30 +840,26 @@ class RutaViewModel: ViewModel() {
         }
     }
 
-    //Traduce de coordenadas a dirección
+    //Traduce de coordenadas a dirección con Geocoder
     suspend fun obtenerDireccion(latLng: GeoPoint, context: Context, googleApiKey: String): String {
         return withContext(Dispatchers.IO) {
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())
 
-                // API 33+ tiene versión suspend
-                val addresses = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-                } else {
-                    // Versión clásica para APIs < 33
-                    @Suppress("DEPRECATION")
-                    geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-                }
+                //API 33+ tiene versión suspend
+                @Suppress("DEPRECATION")
+                val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
 
                 addresses?.firstOrNull()?.getAddressLine(0)
                     ?: obtenerDireccionGoogleMaps(latLng, googleApiKey) // fallback
             } catch (e: IOException) {
-                // fallback a Google Maps API si Geocoder falla
+                //Fallback a Google Maps API si Geocoder falla
                 obtenerDireccionGoogleMaps(latLng, googleApiKey)
             }
         }
     }
 
+    //Traduce de coordenadas a dirección con Google Maps API, por si Geocoder falla
     private fun obtenerDireccionGoogleMaps(latLng: GeoPoint, apiKey: String): String {
         return try {
             val urlStr = "https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey"
@@ -876,27 +872,49 @@ class RutaViewModel: ViewModel() {
             "Dirección no disponible"
         }
     }
-    /*
-    fun obtenerDireccion(latLng: GeoPoint, context: Context): String {
-        val geocoder = Geocoder(context, Locale.getDefault())
-        val direcciones = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-        return direcciones?.firstOrNull()?.getAddressLine(0) ?: "Dirección desconocida"
-    }
-     */
 
-    //Traduce de dirección a coordenadas
-    fun obtenerCoordenadas(direccion: String, context: Context): LatLng? {
-        val geocoder = Geocoder(context, Locale.getDefault())
-        return try {
-            val resultados = geocoder.getFromLocationName(direccion, 1)
-            if (!resultados.isNullOrEmpty()) {
-                val location = resultados.first()
-                LatLng(location.latitude, location.longitude)
-            } else {
-                null
+    //Traduce de dirección a coordenadas con Geocoder y fallback a Google Maps API
+    suspend fun obtenerCoordenadas(
+        direccion: String,
+        context: Context,
+        googleApiKey: String
+    ): LatLng? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+
+                //Intentamos con Geocoder local
+                @Suppress("DEPRECATION")
+                val direcciones = geocoder.getFromLocationName(direccion, 1)
+                if (!direcciones.isNullOrEmpty()) {
+                    val location = direcciones.first()
+                    LatLng(location.latitude, location.longitude)
+                } else {
+                    //Si falla usamos la API de Google Maps
+                    obtenerCoordenadasGoogleMaps(direccion, googleApiKey)
+                }
+            } catch (e: IOException) {
+                //Fallback a Google Maps API si Geocoder falla
+                obtenerCoordenadasGoogleMaps(direccion, googleApiKey)
             }
+        }
+    }
+
+    //Traduce de dirección a coordenadas usando Google Maps API
+    private fun obtenerCoordenadasGoogleMaps(direccion: String, apiKey: String): LatLng? {
+        return try {
+            val urlStr =
+                "https://maps.googleapis.com/maps/api/geocode/json?address=${URLEncoder.encode(direccion, "UTF-8")}&key=$apiKey"
+            val response = URL(urlStr).readText()
+            val json = JSONObject(response)
+            val results = json.getJSONArray("results")
+            if (results.length() > 0) {
+                val location = results.getJSONObject(0)
+                    .getJSONObject("geometry")
+                    .getJSONObject("location")
+                LatLng(location.getDouble("lat"), location.getDouble("lng"))
+            } else null
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
