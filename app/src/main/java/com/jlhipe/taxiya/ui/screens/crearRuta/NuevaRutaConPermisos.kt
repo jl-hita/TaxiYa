@@ -240,16 +240,13 @@ fun NuevaRutaConPermisos(
                     enabled = userLocation.value != LatLng(0.0, 0.0) &&
                             (ruta.destinoGeo != GeoPoint(0.0, 0.0) || ruta.destino.isNotBlank()),
                     modifier = Modifier
-                        .align(Alignment.BottomCenter) // Abajo centrado
-                        .padding(16.dp)
-                        //.background(Color.Blue/*, shape = RoundedCornerShape(8.dp) */),
-                        .background(BlueRibbon)
-                    /*
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Blue,      // 👈 Fondo del botón
-                        contentColor = Color.White         // 👈 Texto/Iconos en blanco
-                    )
-                     */
+                        containerColor = Color.Blue, // Fondo del botón
+                        contentColor = Color.White   // Texto en blanco
+                    ),
+                    shape = RoundedCornerShape(8.dp) // Bordes redondeados
                 ) {
                     Text(text = stringResource(R.string.buscaTaxiLibre))
                 }

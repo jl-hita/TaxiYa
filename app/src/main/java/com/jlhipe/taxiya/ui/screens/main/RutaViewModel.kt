@@ -202,8 +202,8 @@ class RutaViewModel: ViewModel() {
             // Marcar haciaDestino a true solo una vez
             it.haciaCliente = false
             it.haciaDestino = true
-            it.momentoLlegada = System.currentTimeMillis() / 1000
-            it.duracion = ((it.momentoLlegada!! - it.momentoSalida!!).toInt())
+            //it.momentoLlegada = System.currentTimeMillis() / 1000
+            //it.duracion = ((it.momentoLlegada!! - it.momentoSalida!!).toInt())
 
             // Guardar cambios en Firebase
             viewModelScope.launch {
@@ -215,15 +215,15 @@ class RutaViewModel: ViewModel() {
                                 mapOf(
                                     "haciaCliente" to false,
                                     "haciaDestino" to true,
-                                    "momentoLlegada" to it.momentoLlegada,
-                                    "duracion" to it.duracion
+                                    //"momentoLlegada" to it.momentoLlegada,
+                                    //"duracion" to it.duracion
                                 )
                             )
                             .await()
                         //Cuando se hace el cambio se para el job
                         stopTrackingDistancia()
 
-                        //Se inicia el tracking a destino
+                        ///Se inicia el tracking a destino
                         startTrackingDestino()
                     }
                 } catch (e: Exception) {
@@ -233,6 +233,36 @@ class RutaViewModel: ViewModel() {
         }
     }
 
+    /*
+            //it.momentoLlegada = System.currentTimeMillis() / 1000
+            //it.duracion = ((it.momentoLlegada!! - it.momentoSalida!!).toInt())
+
+            // Guardar cambios en Firebase
+            viewModelScope.launch {
+                try {
+                    selectedRuta.value?.let {
+                        FirebaseFirestore.getInstance().collection("rutas")
+                            .document(it.id)
+                            .update(
+                                mapOf(
+                                    "haciaCliente" to false,
+                                    "haciaDestino" to true,
+                                    //"momentoLlegada" to it.momentoLlegada,
+                                    //"duracion" to it.duracion
+                                )
+                            )
+                            .await()
+                        //Cuando se hace el cambio se para el job
+                        stopTrackingDistancia()
+
+                        ///Se inicia el tracking a destino
+                        startTrackingDestino()
+                    }
+                } catch (e: Exception) {
+                    Log.e("RutaViewModel", "Error al actualizar distancia conductor -> cliente", e)
+                }
+            }
+     */
     //Cuando la distancia Conductor/Cliente y destino sea menor a 25 metros se inicia ruta hacia destino
     fun comprobarSiLlegaADestino(forzar: Boolean = false) {
         selectedRuta.value?.let {
@@ -240,6 +270,8 @@ class RutaViewModel: ViewModel() {
                 it.haciaDestino = false
                 it.enDestino = true
                 it.finalizado = true
+                it.momentoLlegada = System.currentTimeMillis() / 1000
+                it.duracion = ((it.momentoLlegada!! - it.momentoSalida!!).toInt())
 
                 // Guardar cambios en Firebase
                 viewModelScope.launch {
@@ -251,7 +283,9 @@ class RutaViewModel: ViewModel() {
                                     mapOf(
                                         "haciaDestino" to false,
                                         "enDestino" to true,
-                                        "finalizado" to true
+                                        "finalizado" to true,
+                                        "momentoLlegada" to it.momentoLlegada,
+                                        "duracion" to it.duracion
                                     )
                                 )
                                 .await()
@@ -287,7 +321,7 @@ class RutaViewModel: ViewModel() {
                     //Actualizamos en firebase
                     actualizaDistanciaConductorDestino(distancia)
 
-                    //Comprobamos si el conductor ha llegado a la posición del cliente
+                    //Comprobamos si el conductor ha llegado al destino
                     comprobarSiLlegaADestino()
 
                     // Publicar en el LiveData
@@ -303,8 +337,7 @@ class RutaViewModel: ViewModel() {
     private fun loadRutaFromFirebase(rutaId: String) {
         //val currentUser = Firebase.auth.currentUser ?: return
 
-        val db = FirebaseFirestore.getInstance()
-        db.collection("rutas").document(rutaId)
+        FirebaseFirestore.getInstance().collection("rutas").document(rutaId)
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
@@ -326,6 +359,8 @@ class RutaViewModel: ViewModel() {
                         .update("posicionConductor",geoPoint,)
                         .await()
                 }
+
+                //TODO Gestionar AQUI la proximidad a cliente y a destino para sacarlo de la vista
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al actualizar ubicacion conductor", e)
             }
@@ -374,7 +409,7 @@ class RutaViewModel: ViewModel() {
 
     //Carga la lista de rutas de Firebase
     suspend fun loadRutasFirebase(userId: String): List<Ruta> {
-        val currentUser = Firebase.auth.currentUser ?: return emptyList()
+        //val currentUser = Firebase.auth.currentUser ?: return emptyList()
 
         val db = Firebase.firestore
         val snapshot = db.collection("rutas").orderBy("fechaCreacion", Query.Direction.DESCENDING).get().await() //Ordenamos por fechaCreacion, descendiente
@@ -517,10 +552,12 @@ class RutaViewModel: ViewModel() {
 
     fun setRuta(ruta: Ruta) {
         _selectedRuta.postValue(ruta)
+        //_selectedRuta.value = ruta
     }
 
     fun deseleccionarRuta() {
         _selectedRuta.postValue(null)
+        //_selectedRuta.value = null
     }
 
     fun getRuta(documentId: String): Ruta {

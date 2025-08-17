@@ -21,5 +21,17 @@
 - Screen nueva petición ruta ->
 
 
-//TODO El mapa de detallesRuta debe mostrar TAMBIEN el destino
-//TODO Que cuando no se usa AppScaffold se muestre el logo TaxiYa peque arriba
+//HECHO -> El mapa de detallesRuta debe mostrar TAMBIEN el destino
+//HECHO -> Añadir botón para salir de la app al menú
+//HECHO -> Que cuando no se usa AppScaffold se muestre el logo TaxiYa peque arriba
+//HECHO -> Que hora estimada de llegada tenga en cuenta el tiempo que tardará el conductor en llegar al cliente
+
+//TODO Recalcular duración y distancia de llegada a cliente hasta que se llegue a cliente
+//TODO Recalcular hora estimada de llegada a destino hasta que se llegue a destino
+//TODO Botón "eliminar ruta" no carga bien las rutas, sigue viendose la eliminada
+//TODO Que se muestre el mapa en detallesRuta desde que el conductor acepta el viaje o incluso antes
+//TODO Cuando "En ruta hacia el destino" -> Duración = 00 min
+//TODO El control de distancias se debe hacer en el viewModel, con la actualización de ubicación. No se debe hacer en el composable
+//TODO Cambiar icono floatingAction "+" por texto "crear ruta" o "buscar cliente"
+//TODO Implementar Botón para marcar conductor como activo/inactivo y que al usuario le avise si no hay conductores en un radio de km (Alternativa -> Que mientras esté la app activa el usuario conste como activo en firebase/usuarios)
+//TODO Extra -> dibujar rutas en el mapa

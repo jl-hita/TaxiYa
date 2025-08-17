@@ -93,4 +93,5 @@
     <string name="tiempoEstimado">Tiempo estimado</string>
     <string name="llegaraEn">Llegará en</string>
     <string name="heLlegadoAlDestino">He llegado al destino</string>
+    <string name="rutaCancelada">Ruta cancelada</string>
 </resources>

@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,15 +61,20 @@ import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
-import com.jlhipe.taxiya.ui.theme.BlueClarito
 import com.jlhipe.taxiya.ui.theme.BlueRibbon
 import com.jlhipe.taxiya.ui.theme.Purple40
 import com.jlhipe.taxiya.ui.theme.RacingBlue
 import com.jlhipe.taxiya.ui.theme.RutaCancelada
+import com.jlhipe.taxiya.ui.theme.RutaCanceladaClarito
 import com.jlhipe.taxiya.ui.theme.RutaDesasignar
 import com.jlhipe.taxiya.ui.theme.RutaEnMarcha
+import com.jlhipe.taxiya.ui.theme.RutaEnMarchaClarito
 import com.jlhipe.taxiya.ui.theme.RutaExitosa
+import com.jlhipe.taxiya.ui.theme.RutaExitosaClarito
 import com.jlhipe.taxiya.ui.theme.RutaExitosaLigero
+import com.jlhipe.taxiya.ui.theme.screens.layout.CabezalAlt
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.internal.wait
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -110,20 +116,25 @@ fun DetallesRuta(
         else if(rutaActiva?.asignado == true) Color(0xFFE3F2FD)
         else Color.White
      */
+
     val backgroundColor = if (rutaActiva?.finalizado == false) {
         //RutaEnMarcha //TODO quizás cambiar a blanco
-        Color.White
+        //Color.White
+        RutaEnMarchaClarito
     } else if (rutaActiva?.cancelada == true) {
-        RutaCancelada
+        //RutaCancelada
+        //RojoClarito
+        RutaCanceladaClarito
     } else if (rutaActiva?.enDestino == true) {
         //RutaExitosa
-        BlueClarito
-        //RutaExitosaLigero
+        //BlueClarito
+        RutaExitosaClarito
     } else {
         Color.White
     }
     val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
     var showDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     var cliente by remember { mutableStateOf<String?>(null) }
 
@@ -135,9 +146,6 @@ fun DetallesRuta(
         mutableStateOf(LatLng(rutaActiva?.posicionConductor?.latitude ?: 0.0,
             rutaActiva?.posicionConductor?.longitude ?: 0.0))
     }
-
-    //val puedeVolver by rutaViewModel.puedeVolver.observeAsState()
-    //val puedeVolver by rutaViewModel.puedeVolver.observeAsState(initial = false)
 
     LaunchedEffect(rutaActiva?.id) {
         rutaActiva?.id?.takeIf { it.isNotBlank() }?.let { rutaId ->
@@ -186,8 +194,24 @@ fun DetallesRuta(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            val destinoPos = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude)
+
+            CabezalAlt(
+                showBack = rutaViewModel.puedeVolver ||
+                        ((user!!.id == rutaActiva!!.conductor || user!!.id == rutaActiva!!.cliente) && rutaActiva!!.finalizado),
+                onBackClick = {
+                    rutaViewModel.deseleccionarRuta()
+                    if (rutaActiva!!.finalizado) {
+                        navController.navigate(Routes.Main)
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+            )
+            /*
             Spacer(Modifier.height(30.dp))
 
+            val destinoPos = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude)
             Log.d("DetallesRuta", "puedeVolver = ${rutaViewModel.puedeVolver}")
 
             /**
@@ -227,22 +251,25 @@ fun DetallesRuta(
                     )
                 }
             }
+             */
 
-            if(!ruta.finalizado) {
-                Text(
-                    text = stringResource(R.string.detallesDeRutaActiva),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            } else {
-                Text(
-                    text = stringResource(R.string.detallesDeRuta),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            var textoTitulo = when {
+                ruta.finalizado -> stringResource(R.string.trayectoFinalizado)
+                ruta.cancelada -> stringResource(R.string.rutaCancelada)
+                ruta.haciaDestino -> stringResource(R.string.enRutaHaciaElDestino)
+                ruta.haciaCliente -> stringResource(R.string.taxiEnCaminoHaciaElCliente)
+                ruta.asignado -> stringResource(R.string.rutaAsignadaATaxista)
+                ruta.enDestino -> stringResource(R.string.detallesDeRuta)
+                else -> stringResource(R.string.buscandoTaxi)
             }
 
-            Spacer(Modifier.height(16.dp))
+            Text(
+                text = textoTitulo,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(12.dp))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -287,13 +314,19 @@ fun DetallesRuta(
                         )
                     }
 
+                    /**
+                     * Si la ruta ha terminado se muestra la hora de llegada
+                     * Si el conductor va hacia el cliente o hacia el destino se muestra un cálculo del tiempo total (conductor->cliente + trayecto a destino)
+                     */
                     if (ruta.finalizado && ruta.momentoLlegada != null) {
                         RutaInfoItem(
                             stringResource(R.string.llegada),
                             formatoFecha.format(Date(ruta.momentoLlegada!! * 1000))
                         )
-                    } else if (ruta.haciaDestino && ruta.momentoSalida != null && ruta.duracion != null) {
-                        val estimada = Date((ruta.momentoSalida!! + ruta.duracion.toLong()) * 1000)
+                    //} else if (ruta.haciaDestino && ruta.momentoSalida != null && ruta.duracion != null) {
+                    } else if((ruta.haciaCliente || ruta.haciaDestino) && ruta.momentoSalida != null) {
+                        //val estimada = Date((ruta.momentoSalida!! + ruta.duracion.toLong()) * 1000)
+                        val estimada = Date((ruta.momentoSalida!!.toLong() + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
                         RutaInfoItem(
                             stringResource(R.string.horaEstimadaLlegada),
                             formatoFecha.format(estimada)
@@ -333,6 +366,7 @@ fun DetallesRuta(
                     )
                      */
 
+                    /*
                     RutaInfoItem(
                         stringResource(R.string.estado),
                         when {
@@ -343,6 +377,7 @@ fun DetallesRuta(
                             else -> stringResource(R.string.buscandoTaxi)
                         }
                     )
+                     */
                 }
             }
 
@@ -350,7 +385,7 @@ fun DetallesRuta(
 
             //Mostrar mapa si asignado y va hacia cliente o destino
             if (!ruta.finalizado && ruta.asignado && (ruta.haciaCliente || ruta.haciaDestino)) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 //val clientePos = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
                 //val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
@@ -361,6 +396,7 @@ fun DetallesRuta(
                     val bounds = LatLngBounds.builder()
                         .include(clientePos.value)
                         .include(conductorPos.value)
+                        .include(destinoPos)
                         .build()
                     cameraPositionState.animate(
                         update = CameraUpdateFactory.newLatLngBounds(bounds, 100)
@@ -400,7 +436,7 @@ fun DetallesRuta(
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
                         )
                         Marker(
-                            position = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude),
+                            position = destinoPos,
                             title = stringResource(R.string.destino),
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                         )
@@ -409,7 +445,7 @@ fun DetallesRuta(
 
                 if ((!esConductor.value && !ruta.finalizado && ruta.haciaCliente && !ruta.haciaDestino) ||
                     (esConductor.value && ruta.asignado && ruta.conductor == user!!.id && !ruta.finalizado && ruta.haciaCliente && !ruta.haciaDestino)) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     val mensajeDistanciaConductorCliente = if(esConductor.value) stringResource(R.string.distanciaHastaCliente) else stringResource(R.string.conductorEstaA)
                     val mensajeTiempoConductorCliente = if(esConductor.value) stringResource(R.string.tiempoEstimado) else stringResource(R.string.llegaraEn)
@@ -439,7 +475,7 @@ fun DetallesRuta(
              */
             if ((!esConductor.value && !ruta.finalizado && !ruta.haciaCliente && !ruta.haciaDestino) ||
                 (esConductor.value && ruta.asignado && ruta.conductor == user!!.id && !ruta.finalizado && (ruta.haciaCliente || ruta.haciaDestino))) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Button(
                     onClick = { showDialog = true },
@@ -462,11 +498,12 @@ fun DetallesRuta(
                             onClick = {
                                 showDialog = false
                                 Log.d("DetallesRuta", "Finalizando ruta $ruta")
-                                rutaViewModel.marcarRutaCancelada(ruta.id)
-                                //rutaViewModel.marcarRutaFinalizada(ruta.id)
-                                rutaViewModel.deseleccionarRuta()
-                                rutaViewModel.loadRutas()
-                                navController.navigate(Routes.Main)
+                                coroutineScope.launch {
+                                    rutaViewModel.marcarRutaCancelada(ruta.id)
+                                    rutaViewModel.loadRutas()
+                                    navController.navigate(Routes.Main)
+                                    rutaViewModel.deseleccionarRuta()
+                                }
                             }
                         ) {
                             Text(stringResource(R.string.siEliminar),
@@ -486,21 +523,27 @@ fun DetallesRuta(
              * Botón de eliminar ruta
              */
             if(ruta.finalizado) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
+
+
 
                 Button(
                     onClick = {
-                        Log.d("DetallesRuta", "Eliminando ruta $ruta")
-                        rutaViewModel.eliminarRuta(ruta.id, esConductor.value)
-                        rutaViewModel.deseleccionarRuta()
-                        rutaViewModel.loadRutas()
-                        navController.navigate(Routes.Main)
+                        //Uso coroutine scope porque si no se puede navegar antes de eliminar y cargar rutas
+                        coroutineScope.launch {
+                            //Eliminar la ruta
+                            rutaViewModel.eliminarRuta(ruta.id, esConductor.value)
+                            //Recargar rutas
+                            rutaViewModel.loadRutas()
+                            //Navego al menú principal
+                            navController.navigate(Routes.Main)
+                            //Deseleccionar ruta
+                            rutaViewModel.deseleccionarRuta()
+
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple40), //TODO quizás cambiar a RutaCancelada (rojo)
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
+                    colors = ButtonDefaults.buttonColors(containerColor = Purple40)
                 ) {
                     Text(stringResource(R.string.eliminarRuta))
                 }
@@ -510,7 +553,7 @@ fun DetallesRuta(
              * Botón de aceptar ruta (asignar)
              */
             if(esConductor.value && !ruta.finalizado && !ruta.asignado) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Button(
                     onClick = {
@@ -536,7 +579,7 @@ fun DetallesRuta(
              * Botón de desasignar ruta
              */
             if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaCliente && !ruta.haciaDestino) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Button(
                     onClick = {
@@ -559,16 +602,16 @@ fun DetallesRuta(
              * Botón de iniciar ruta hacia cliente
              */
             if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && !ruta.haciaCliente) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Button(
                     onClick = {
                         Log.d("DetallesRuta", "Iniciando ruta $ruta")
-                        rutaViewModel.iniciarRutaHaciaCliente(ruta.id)
-                        //Una vez el conductor se dirige hacia el cliente se controla la distancia entre conductor y cliente
-                        rutaViewModel.startTrackingDistancia()
-                        //rutaViewModel.loadRutas()
-                        //navController.navigate(Routes.Main)
+                        coroutineScope.launch {
+                            rutaViewModel.iniciarRutaHaciaCliente(ruta.id)
+                            //Una vez el conductor se dirige hacia el cliente se controla la distancia entre conductor y cliente
+                            rutaViewModel.startTrackingDistancia()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     //colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
@@ -584,14 +627,15 @@ fun DetallesRuta(
              * Botón de ir hacia destino
              */
             if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && ruta.haciaCliente) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Button(
                     onClick = {
                         Log.d("DetallesRuta", "Iniciando ruta $ruta")
-                        rutaViewModel.iniciarRutaHaciaDestino()
-                        //Una vez el conductor se dirige hacia el cliente se controla la distancia entre conductor y cliente
-                        rutaViewModel.startTrackingDistancia()
+                        coroutineScope.launch {
+                            //Se controla la distancia entre conductor y destino
+                            rutaViewModel.iniciarRutaHaciaDestino()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -606,9 +650,10 @@ fun DetallesRuta(
             /**
              * Indicamos de forma visual que el conductor se dirige hacia el cliente y tiempo aproximado (ruta.duracionConductor)
              * TODO Plantear cambiar condición de distancia a tiempo
+             * TODO plantear llevar comprobación a comprobarSiIniciaDestino()
              */
             if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor >= 500) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -639,9 +684,10 @@ fun DetallesRuta(
             /**
              * Indicar de forma visual que el conductor está llegando a la posición del cliente
              * TODO Plantear cambiar condición de distancia a tiempo
+             * TODO plantear llevar comprobación a comprobarSiIniciaDestino()
              */
             if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor < 500) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -671,13 +717,15 @@ fun DetallesRuta(
              * Botón de marcar que se ha llegado al destino
              */
             if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && ruta.haciaDestino && !ruta.enDestino) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Button(
                     onClick = {
                         Log.d("DetallesRuta", "Llegando a destino")
                         //localizacionViewModel.stopLocationUpdates()
-                        rutaViewModel.comprobarSiLlegaADestino(forzar = true)
+                        coroutineScope.launch {
+                            rutaViewModel.comprobarSiLlegaADestino(forzar = true)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     //colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
@@ -706,7 +754,7 @@ fun DetallesRuta(
              */
             //if(ruta.finalizado && ruta.asignado && ruta.distanciaDestino < 50) {
             if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && ruta.finalizado && !ruta.cancelada && ruta.asignado && ruta.enDestino) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 //Indicar de forma visual que el conductor/cliente ha llegado al destino
                 Row(
@@ -736,9 +784,11 @@ fun DetallesRuta(
                  */
                 Button(
                     onClick = {
-                        rutaViewModel.deseleccionarRuta()
-                        rutaViewModel.loadRutas()
-                        navController.navigate(Routes.Main)
+                        coroutineScope.launch {
+                            rutaViewModel.loadRutas()
+                            navController.navigate(Routes.Main)
+                            rutaViewModel.deseleccionarRuta()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
