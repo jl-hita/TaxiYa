@@ -1,6 +1,7 @@
 package com.jlhipe.taxiya.navigation
 
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -30,6 +31,13 @@ fun Navigation(
 ) {
     val navController = rememberNavController()
     //val rutasController = remember { RutasController()}
+
+    /*
+    BackHandler(enabled = true) {
+        //Al dejar esto en blanco evito que el botón de volver de android tenga efecto
+        //Así controlo por completo la navegación
+    }
+     */
 
     NavHost(
         navController = navController,
@@ -89,6 +97,9 @@ fun Navigation(
 
         composable<Routes.Main> {
             MainScreen(navController, loginViewModel, rutaViewModel, localizacionViewModel)
+            BackHandler(enabled = true) {
+                //Lo dejo en blanco -> botón atrás inhabilitado
+            }
         }
 
         composable<Routes.NuevaRuta> {
@@ -97,10 +108,16 @@ fun Navigation(
 
         composable<Routes.DetallesRuta> {
             DetallesRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
+            BackHandler(enabled = true) {
+                //Lo dejo en blanco -> botón atrás inhabilitado
+            }
         }
 
         composable<Routes.PerfilUsuario> {
             PerfilUsuarioScreen(navController, loginViewModel, rutaViewModel)
+            BackHandler(enabled = true) {
+                //Lo dejo en blanco -> botón atrás inhabilitado
+            }
         }
 
         composable<Routes.BuscarCliente> {
