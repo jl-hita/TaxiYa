@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -21,6 +22,7 @@ import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
 import com.jlhipe.taxiya.model.User
 import kotlinx.coroutines.Dispatchers
@@ -68,6 +70,8 @@ class RutaViewModel: ViewModel() {
 
     val userId: String
         get() = Firebase.auth.currentUser?.uid.orEmpty()
+
+    private var claveAPICalculoDistanciaDuracion: String = ""
 
     //Variable para manejar permisos
     val visiblePermissionDialogeQueue = mutableStateListOf<String>()
@@ -124,16 +128,24 @@ class RutaViewModel: ViewModel() {
             while (true) {
                 val ruta = _selectedRuta.value
                 if (ruta != null) {
-                    val clientePos = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
-                    val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
+                    //val clientePos = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
+                    //val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
 
-                    val distancia: Long = calcularDistancia(clientePos, conductorPos)
+                    //val distancia: Long = calcularDistancia(clientePos, conductorPos)
+                    // Obtener distancia y duración con la API
+                    val (distancia, duracion) = getDistanceAndDuration(ruta.posicionConductor, ruta.origenGeo, claveAPICalculoDistanciaDuracion)
+                    _selectedRuta.value!!.distanciaConductor = distancia.toLong()
+                    _selectedRuta.value!!.duracionConductor = duracion
+                    Log.d("RutaViewModel", "Clave API -> $claveAPICalculoDistanciaDuracion")
+                    Log.d("RutaViewModel", "Distancia conductor->destino: $distancia, duración conductor->destino: $duracion")
 
                     // Crear copia actualizada de la ruta
-                    val updatedRuta = ruta.copy(distanciaConductor = distancia)
+                    var updatedRuta = ruta.copy(distanciaConductor = distancia.toLong())
+                    updatedRuta = updatedRuta.copy(duracionConductor = duracion)
 
                     //Actualizamos en firebase
-                    actualizaDistanciaClienteConductor(distancia)
+                    //actualizaDistanciaClienteConductor(distancia.toLong())
+                    actualizaDistanciaDuracionConductor(distancia.toLong(), duracion)
 
                     //Comprobamos si el conductor ha llegado a la posición del cliente
                     comprobarSiIniciaDestino()
@@ -170,6 +182,28 @@ class RutaViewModel: ViewModel() {
         }
     }
 
+    fun actualizaDistanciaDuracionConductor(distancia: Long, duracion: Int) {
+        viewModelScope.launch {
+            try {
+                val db = FirebaseFirestore.getInstance()
+                selectedRuta.value?.let {
+                    db.collection("rutas")
+                        .document(it.id)
+                        //.update("distanciaConductor", distancia)
+                        .update(
+                            mapOf(
+                                "distanciaConductor" to distancia,
+                                "duracionConductor" to duracion,
+                            )
+                        )
+                        .await()
+                }
+            } catch (e: Exception) {
+                Log.e("RutaViewModel", "Error al actualizar distancia conductor -> cliente", e)
+            }
+        }
+    }
+
     //Actualiza la distancia entre conductor/cliente y destino en firebase
     fun actualizaDistanciaConductorDestino(distancia: Long) {
         viewModelScope.launch {
@@ -179,6 +213,29 @@ class RutaViewModel: ViewModel() {
                     db.collection("rutas")
                         .document(it.id)
                         .update("distanciaDestino", distancia)
+                        .await()
+                }
+            } catch (e: Exception) {
+                Log.e("RutaViewModel", "Error al actualizar distancia conductor -> cliente", e)
+            }
+        }
+    }
+
+    //Actualiza la distancia y duración entre conductor/cliente y destino en firebase
+    fun actualizaDistanciaDuracionConductorDestino(distancia: Long, duracion: Int) {
+        viewModelScope.launch {
+            try {
+                val db = FirebaseFirestore.getInstance()
+                selectedRuta.value?.let {
+                    db.collection("rutas")
+                        .document(it.id)
+                        //.update("distanciaDestino", distancia)
+                        .update(
+                            mapOf(
+                                "distancia" to distancia,
+                                "duracion" to duracion
+                            )
+                        )
                         .await()
                 }
             } catch (e: Exception) {
@@ -266,7 +323,7 @@ class RutaViewModel: ViewModel() {
     //Cuando la distancia Conductor/Cliente y destino sea menor a 25 metros se inicia ruta hacia destino
     fun comprobarSiLlegaADestino(forzar: Boolean = false) {
         selectedRuta.value?.let {
-            if (forzar || (!it.finalizado && it.asignado && it.haciaDestino && it.distanciaDestino < 25)) {
+            if (forzar || (!it.finalizado && it.asignado && it.haciaDestino && it.distancia < 25)) {
                 it.haciaDestino = false
                 it.enDestino = true
                 it.finalizado = true
@@ -310,17 +367,23 @@ class RutaViewModel: ViewModel() {
             while (true) {
                 val ruta = _selectedRuta.value
                 if (ruta != null) {
-                    val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
-                    val destinoPos = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude)
+                    //val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
+                    //val destinoPos = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude)
 
-                    val distancia: Long = calcularDistancia(conductorPos, destinoPos)
+                    //val distancia: Long = calcularDistancia(conductorPos, destinoPos)
+                    val (distancia, duracion) = getDistanceAndDuration(ruta.posicionConductor, ruta.destinoGeo, claveAPICalculoDistanciaDuracion)
+                    _selectedRuta.value!!.distancia = distancia.toLong()
+                    _selectedRuta.value!!.duracion = duracion
+                    Log.d("RutaViewModel", "Clave API -> $claveAPICalculoDistanciaDuracion")
+                    Log.d("RutaViewModel", "Distancia conductor->destino: $distancia, duración conductor->destino: $duracion")
 
                     // Crear copia actualizada de la ruta
                     //val updatedRuta = ruta.copy(distanciaConductor = distancia)
-                    val updatedRuta = ruta.copy(distancia = distancia)
+                    var updatedRuta = _selectedRuta.value!!.copy(distancia = distancia.toLong())
+                    updatedRuta = updatedRuta.copy(duracion = duracion)
 
                     //Actualizamos en firebase
-                    actualizaDistanciaConductorDestino(distancia)
+                    actualizaDistanciaDuracionConductorDestino(distancia.toLong(), duracion)
 
                     //Comprobamos si el conductor ha llegado al destino
                     comprobarSiLlegaADestino()
@@ -724,6 +787,8 @@ class RutaViewModel: ViewModel() {
 
     //Asignar ruta
     fun asignarRuta(rutaId: String, user: User, routesApiKey: String) {
+        claveAPICalculoDistanciaDuracion = routesApiKey
+
         viewModelScope.launch {
             try {
                 //Hacemos que no puedan salir de DetallesRuta

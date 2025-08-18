@@ -324,10 +324,14 @@ fun DetallesRuta(
                             formatoFecha.format(Date(ruta.momentoLlegada!! * 1000))
                         )
                     //} else if (ruta.haciaDestino && ruta.momentoSalida != null && ruta.duracion != null) {
-                    } else if(ruta.haciaCliente || ruta.haciaDestino) {
-                        //val estimada = Date((ruta.momentoSalida!! + ruta.duracion.toLong()) * 1000)
-                        //val estimada = Date((ruta.momentoSalida!!.toLong() + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
+                    } else if(ruta.haciaCliente) {
                         val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
+                        RutaInfoItem(
+                            stringResource(R.string.horaEstimadaLlegada),
+                            formatoFecha.format(estimada)
+                        )
+                    } else if(ruta.haciaDestino) {
+                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracion.toLong()) * 1000)
                         RutaInfoItem(
                             stringResource(R.string.horaEstimadaLlegada),
                             formatoFecha.format(estimada)
@@ -385,7 +389,9 @@ fun DetallesRuta(
             //Spacer(Modifier.height(24.dp))
 
             //Mostrar mapa si asignado y va hacia cliente o destino
-            if (!ruta.finalizado && ruta.asignado && (ruta.haciaCliente || ruta.haciaDestino)) {
+            //if (!ruta.finalizado && ruta.asignado && (ruta.haciaCliente || ruta.haciaDestino)) {
+            if ((esConductor.value == false && !ruta.finalizado && ruta.asignado && (ruta.haciaCliente || ruta.haciaDestino))
+                || (esConductor.value == true && ruta.conductor == user!!.id && !ruta.finalizado && ruta.asignado)) {
                 Spacer(Modifier.height(12.dp))
 
                 //val clientePos = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
@@ -474,7 +480,8 @@ fun DetallesRuta(
              * La podrá cancelar el cliente cuando no esté finalizada && no haciaCliente no haciaDestino
              * La podrá cancelar el conductor cuando la tenga asignada y no haya finalizado && (haciaCliente || haciaDestino)
              */
-            if ((!esConductor.value && !ruta.finalizado && !ruta.haciaCliente && !ruta.haciaDestino) ||
+            //if ((!esConductor.value && !ruta.finalizado && !ruta.haciaCliente && !ruta.haciaDestino) ||
+            if ((!esConductor.value && !ruta.finalizado) ||
                 (esConductor.value && ruta.asignado && ruta.conductor == user!!.id && !ruta.finalizado && (ruta.haciaCliente || ruta.haciaDestino))) {
                 Spacer(Modifier.height(12.dp))
 
@@ -526,20 +533,20 @@ fun DetallesRuta(
             if(ruta.finalizado) {
                 Spacer(Modifier.height(12.dp))
 
-
-
                 Button(
                     onClick = {
                         //Uso coroutine scope porque si no se puede navegar antes de eliminar y cargar rutas
                         coroutineScope.launch {
                             //Eliminar la ruta
                             rutaViewModel.eliminarRuta(ruta.id, esConductor.value)
+                            delay(100)
                             //Recargar rutas
-                            rutaViewModel.loadRutas()
-                            //Navego al menú principal
-                            navController.navigate(Routes.Main)
+                            //rutaViewModel.loadRutas()
+                            //delay(100)
                             //Deseleccionar ruta
                             rutaViewModel.deseleccionarRuta()
+                            //Navego al menú principal
+                            navController.navigate(Routes.Main)
 
                         }
                     },

@@ -22,9 +22,10 @@ data class Ruta(
     var momentoLlegada: Long? = 1,
     //var precio: Number = 0, //Precio en céntimos de euro
     var posicionConductor: GeoPoint = GeoPoint(0.0, 0.0), //Situacion espacial del conductor
-    var distanciaConductor: Long = 100000, //Distancia en linea recta en metros del conductor respecto del cliente
-    var distanciaDestino: Long = 100000, //Distancia en linea recta al destino, para controlar cuando llegue a destino
+    //var distanciaConductor: Long = 100000, //Distancia en linea recta en metros del conductor respecto del cliente
+    //var distanciaDestino: Long = 100000, //Distancia en linea recta al destino, para controlar cuando llegue a destino
     var duracionConductor: Int = 0, //Distancia en tiempo del conductor respecto del cliente
+    var distanciaConductor: Long = 100000, //Distancia de ruta en metros del conductor respecto del cliente
     var distancia: Long = 0, //Distancia en metros con un decimal
     var duracion: Int = 0, //Duración en tiempo(segundos) calculada del viaje (se calcula antes de salir, se actualiza al terminar)
     var asignado:  Boolean = false, //¿Está la ruta asignada a un taxista?
