@@ -147,6 +147,10 @@ class RutaViewModel: ViewModel() {
                     //actualizaDistanciaClienteConductor(distancia.toLong())
                     actualizaDistanciaDuracionConductor(distancia.toLong(), duracion)
 
+                    //TODO si afecta mucho al rendimiento se puede quitar de aquí y que se calcule solo al asignar ruta
+                    //Actualizamos dibujo ruta conductor -> cliente
+                    getDirectionsRouteConductorCliente(ruta.id)
+
                     //Comprobamos si el conductor ha llegado a la posición del cliente
                     comprobarSiIniciaDestino()
 
@@ -280,6 +284,12 @@ class RutaViewModel: ViewModel() {
                         //Cuando se hace el cambio se para el job
                         stopTrackingDistancia()
 
+                        //Borramos dibujo ruta conductor -> cliente
+                        borrarDirectionsRouteConductorCliente(it.id)
+
+                        //Dibujo ruta conductor -> cliente
+                        getDirectionsRouteClienteDestino(it.id)
+
                         ///Se inicia el tracking a destino
                         startTrackingDestino()
                     }
@@ -401,14 +411,19 @@ class RutaViewModel: ViewModel() {
     private fun loadRutaFromFirebase(rutaId: String) {
         //val currentUser = Firebase.auth.currentUser ?: return
 
-        FirebaseFirestore.getInstance().collection("rutas").document(rutaId)
-            .get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    val ruta = doc.toObject(Ruta::class.java)
-                    _selectedRuta.value = ruta
+        try {
+            FirebaseFirestore.getInstance().collection("rutas").document(rutaId)
+                .get()
+                .addOnSuccessListener { doc ->
+                    if (doc.exists()) {
+                        val ruta = doc.toObject(Ruta::class.java)
+                        _selectedRuta.value = ruta
+                    }
                 }
-            }
+        } catch(e: Exception) {
+            Log.d("RutaViewModel", "Excepción en RutaViewModel.loadRutaFromFirebase() -> ${e.message} -> ${e.stackTrace}")
+        }
+
     }
 
     //Cambia ubicación Conductor
@@ -591,6 +606,7 @@ class RutaViewModel: ViewModel() {
         // Obtener distancia y duración con la API
         val (distancia, duracion) = getDistanceAndDuration(ruta.origenGeo, ruta.destinoGeo, routesApiKey)
         ruta.distancia = distancia.toLong()
+        ruta.distanciaOriginal = ruta.distancia
         ruta.duracion = duracion
 
         ruta.fechaCreacion = System.currentTimeMillis()
@@ -815,6 +831,10 @@ class RutaViewModel: ViewModel() {
                         )
                     )
                     .await()
+
+                //Obtenemos dibujo ruta conductor -> cliente
+                getDirectionsRouteConductorCliente(rutaId)
+
                 Log.d("RutaViewModel", "Ruta $rutaId asignada")
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
@@ -836,6 +856,10 @@ class RutaViewModel: ViewModel() {
                         )
                     )
                     .await()
+
+                //Borramos dibujo ruta conductor -> cliente
+                borrarDirectionsRouteConductorCliente(rutaId)
+
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
             }
@@ -1032,6 +1056,206 @@ class RutaViewModel: ViewModel() {
         } catch (e: Exception) {
             null
         }
+    }
+
+    //Decodifica polylines
+    private fun decodePolyline(encoded: String): List<LatLng> {
+        val poly = ArrayList<LatLng>()
+        var index = 0
+        val len = encoded.length
+        var lat = 0
+        var lng = 0
+
+        while (index < len) {
+            var b: Int
+            var shift = 0
+            var result = 0
+            do {
+                b = encoded[index++].code - 63
+                result = result or (b and 0x1f shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
+            lat += dlat
+
+            shift = 0
+            result = 0
+            do {
+                b = encoded[index++].code - 63
+                result = result or (b and 0x1f shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlng = if (result and 1 != 0) (result shr 1).inv() else result shr 1
+            lng += dlng
+
+            val latLng = LatLng(
+                lat.toDouble() / 1E5,
+                lng.toDouble() / 1E5
+            )
+            poly.add(latLng)
+        }
+
+        return poly
+    }
+
+    //Obtiene el dibujo de ruta entre dos puntos
+    suspend fun getDirectionsRoute(p1: GeoPoint, p2: GeoPoint): List<LatLng> {
+        //_selectedRuta.value ?: return emptyList()
+        //Doy por hecho que p1 y p2 son correctos
+
+        val apiKey = claveAPICalculoDistanciaDuracion
+        val client = OkHttpClient()
+        var decodedPath: List<LatLng> = emptyList()
+
+        return withContext(Dispatchers.IO) {
+            val url =
+                "https://maps.googleapis.com/maps/api/directions/json?" +
+                        "origin=${p1.latitude},${p1.longitude}" +
+                        "&destination=${p2.latitude},${p2.longitude}" +
+                        "&mode=driving&key=$apiKey"
+
+            val request = Request.Builder().url(url).build()
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: return@withContext emptyList()
+
+                val json = JSONObject(body)
+                val status = json.getString("status")
+                if (status != "OK") {
+                    Log.e("RutaViewModel", "*** Google Directions API error: $status")
+                    return@withContext emptyList()
+                }
+
+                val routes = json.getJSONArray("routes")
+                if (routes.length() > 0) {
+                    val encoded = routes.getJSONObject(0)
+                        .getJSONObject("overview_polyline")
+                        .getString("points")
+                    return@withContext decodePolyline(encoded)
+                }
+            }
+            emptyList()
+        }
+
+        /*
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d("RutaViewModel", " *** Obteniendo dibujo de ruta *** ")
+            try {
+                val url =
+                    "https://maps.googleapis.com/maps/api/directions/json?" +
+                            "origin=${p1.latitude},${p1.longitude}" +
+                            "&destination=${p2.latitude},${p2.longitude}" +
+                            "&mode=driving&key=$apiKey"
+
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
+
+                val body = response.body?.string()
+                if (body == null) {
+                    Log.e("RutaViewModel", "Respuesta sin body")
+                    return@launch
+                }
+
+                val json = JSONObject(body)
+                val status = json.getString("status")
+                if (status != "OK") {
+                    Log.e("RutaViewModel", "*** Google Directions API error: $status")
+                    return@launch
+                }
+
+                val routes = json.getJSONArray("routes")
+                if (routes.length() > 0) {
+                    val overviewPolyline = routes.getJSONObject(0).getJSONObject("overview_polyline")
+                    val encoded = overviewPolyline.getString("points")
+                    decodedPath = decodePolyline(encoded)
+                }
+            } catch (e: Exception) {
+                //e.printStackTrace()
+                Log.e("RutaViewModel", "Error obteniendo ruta: ${e.message}", e)
+            }
+        }
+        Log.d("RutaViewModel", " *** Resultado -> $decodedPath ")
+        return decodedPath
+         */
+    }
+
+    //Obtiene la linea de ruta entre conductor y cliente
+    fun getDirectionsRouteConductorCliente(rutaId: String) {
+        var ruta = _selectedRuta.value ?: return
+
+        viewModelScope.launch {
+            val polylineLatLng: List<LatLng> = getDirectionsRoute(ruta.posicionConductor, ruta.origenGeo)
+
+            //Convertimos a GeoPoint para Firebase
+            ruta.polylineCliente = polylineLatLng.map { GeoPoint(it.latitude, it.longitude) }
+
+            if(ruta.polylineCliente.isNotEmpty()) {
+                //Guardamos en firebase
+                FirebaseFirestore.getInstance()
+                    .collection("rutas")
+                    .document(rutaId)
+                    .update("polylineCliente", ruta.polylineCliente)
+
+                //Copiamos a selectedRuta
+                _selectedRuta.postValue(ruta)
+            }
+        }
+    }
+
+    //Borramos linea de ruta entre conductor y cliente
+    fun borrarDirectionsRouteConductorCliente(rutaId: String) {
+        var ruta = _selectedRuta.value ?: return
+
+        viewModelScope.launch {
+            ruta.polylineCliente = emptyList()
+
+            //Guardamos en firebase
+            FirebaseFirestore.getInstance()
+                .collection("rutas")
+                .document(rutaId)
+                .update("polylineCliente", ruta.polylineCliente)
+
+            //Copiamos a selectedRuta
+            _selectedRuta.postValue(ruta)
+        }
+    }
+
+    //Obtiene la linea de ruta entre Conductor y destino
+    fun getDirectionsRouteClienteDestino(rutaId: String) {
+        var ruta = _selectedRuta.value ?: return
+
+        viewModelScope.launch {
+            val polylineLatLng: List<LatLng> = getDirectionsRoute(ruta.posicionConductor, ruta.destinoGeo)
+
+            // Convertimos a GeoPoint para Firebase
+            ruta.polylineDestino = polylineLatLng.map { GeoPoint(it.latitude, it.longitude) }
+
+            if(ruta.polylineDestino.isNotEmpty()) {
+                //Guardamos en firebase
+                FirebaseFirestore.getInstance()
+                    .collection("rutas")
+                    .document(rutaId)
+                    .update("polylineDestino", ruta.polylineDestino)
+
+                //Copiamos a selectedRuta
+                _selectedRuta.postValue(ruta)
+            }
+        }
+    }
+
+    //Borramos linea de ruta entre cliente y destino
+    fun borrarDirectionsRouteClienteDestino(rutaId: String) {
+        var ruta = _selectedRuta.value ?: return
+
+        ruta.polylineDestino = emptyList()
+
+        //Guardamos en firebase
+        FirebaseFirestore.getInstance()
+            .collection("rutas")
+            .document(rutaId)
+            .update("polylineDestino", ruta.polylineDestino)
+
+        //Copiamos a selectedRuta
+        _selectedRuta.postValue(ruta)
     }
 
     /**

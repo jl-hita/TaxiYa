@@ -26,7 +26,8 @@ data class Ruta(
     //var distanciaDestino: Long = 100000, //Distancia en linea recta al destino, para controlar cuando llegue a destino
     var duracionConductor: Int = 0, //Distancia en tiempo del conductor respecto del cliente
     var distanciaConductor: Long = 100000, //Distancia de ruta en metros del conductor respecto del cliente
-    var distancia: Long = 0, //Distancia en metros con un decimal
+    var distancia: Long = 0, //Distancia en metros con un decimal, se actualiza en tiempo real
+    var distanciaOriginal: Long = 0, //Distancia de cliente a destino en el momento de crear la ruta
     var duracion: Int = 0, //Duración en tiempo(segundos) calculada del viaje (se calcula antes de salir, se actualiza al terminar)
     var asignado:  Boolean = false, //¿Está la ruta asignada a un taxista?
     var haciaCliente: Boolean = false, //¿Está el taxi yendo a recoger al usuario?
@@ -36,6 +37,10 @@ data class Ruta(
     var cancelada: Boolean = false,
     var visibleCliente: Boolean = true, //Si == false, estará oculta para el cliente
     var visibleConductor: Boolean = true, //Si == false, estará oculta para el conductor
+    //var polylineCliente: List<LatLng> = emptyList(), //Dibujo de ruta en el mapa de conductor a cliente
+    //var polylineDestino: List<LatLng> = emptyList(), //Dibujo de ruta en el mapa de cliente a destino
+    var polylineCliente: List<GeoPoint> = emptyList(), //Dibujo de ruta en el mapa de conductor a cliente
+    var polylineDestino: List<GeoPoint> = emptyList(), //Dibujo de ruta en el mapa de cliente a destino
 ) {
 }
 

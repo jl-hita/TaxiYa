@@ -18,6 +18,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,7 @@ fun AppScaffold(
     botonAccion: () -> Unit = {},  //Botón de acción (nueva ruta)
     loginViewModel: LoginViewModel,
     navController: NavController,
+    textoBotonAccion: String,
     content: @Composable () -> Unit         // Se le pasa el contenido principal mediante parámetro
 ) {
     Scaffold(
@@ -54,6 +56,7 @@ fun AppScaffold(
                     onClick = botonAccion
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.nuevaRuta))
+                    Text(textoBotonAccion)
                 }
             }
         },

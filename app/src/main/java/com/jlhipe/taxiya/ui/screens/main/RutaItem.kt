@@ -48,6 +48,8 @@ fun RutaItem(
         else if(!ruta.finalizado) RutaEnMarcha
         else Color.White
 
+    val colorTexto = if((ruta.finalizado && ruta.cancelada) || !ruta.finalizado) Color.White else Color.Black
+
     /*
     val backgroundColor = if (!ruta.finalizado) {
         //Color(0xFFD0F0C0) // verde claro
@@ -85,6 +87,7 @@ fun RutaItem(
                             }
                         },
                         style = MaterialTheme.typography.bodyMedium,
+                        color = colorTexto,
                         modifier = Modifier.weight(0.8f)
                     )
                     Text(
@@ -95,6 +98,7 @@ fun RutaItem(
                             append("%.1f km".format(distancia.toDouble() / 1000))
                         },
                         style = MaterialTheme.typography.bodyMedium,
+                        color = colorTexto,
                         modifier = Modifier.weight(1.2f)
                     )
                 }
@@ -105,7 +109,8 @@ fun RutaItem(
                             append(formatoFecha.format(Date(ruta.fechaCreacion!!)))
                         }
                     },
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colorTexto,
                 )
             }
 
@@ -116,7 +121,8 @@ fun RutaItem(
                     }
                     append(ruta.origen)
                 },
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorTexto,
             )
 
             Text(
@@ -126,7 +132,8 @@ fun RutaItem(
                     }
                     append(ruta.destino)
                 },
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorTexto,
             )
 
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -138,6 +145,7 @@ fun RutaItem(
                         append(distanciaKm)
                     },
                     style = MaterialTheme.typography.bodyMedium,
+                    color = colorTexto,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -149,6 +157,7 @@ fun RutaItem(
                         append(duracionFormateada)
                     },
                     style = MaterialTheme.typography.bodyMedium,
+                    color = colorTexto,
                     modifier = Modifier.weight(1f)
                 )
             }

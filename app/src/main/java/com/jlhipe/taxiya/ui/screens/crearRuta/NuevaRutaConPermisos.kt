@@ -180,6 +180,7 @@ fun NuevaRutaConPermisos(
         botonAccion = { navController.navigate(Routes.NuevaRuta) },
         loginViewModel = loginViewModel,
         navController = navController,
+        textoBotonAccion = ""
     ) {
         if (localizacionViewModel.tienePermisosGPS()) {
             Box(modifier = Modifier.fillMaxSize()) {

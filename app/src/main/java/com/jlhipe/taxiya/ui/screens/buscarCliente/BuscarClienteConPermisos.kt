@@ -34,10 +34,12 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.jlhipe.taxiya.R
+import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.ListaDeRutas
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
+import com.jlhipe.taxiya.ui.theme.screens.layout.CabezalAlt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
@@ -55,7 +57,6 @@ fun BuscarClienteConPermisos(
     rutaViewModel: RutaViewModel,
     localizacionViewModel: LocalizacionViewModel
 ) {
-    //TODO Cargar una lista de rutas ordenadas por proximidad al taxi, limitada a 5 elementos (en el viewmodel)
     val user = loginViewModel.user
     val userLocation by localizacionViewModel.ubicacion.observeAsState()
     //val userLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
@@ -109,8 +110,15 @@ fun BuscarClienteConPermisos(
             //.fillMaxWidth()
             .padding(16.dp)
     ) {
-        Spacer(Modifier.height(16.dp))
+        //Spacer(Modifier.height(16.dp))
+        CabezalAlt(
+            showBack = true,
+            onBackClick = {
+                navController.navigate(Routes.Main)
+            }
+        )
 
+        /*
         Row(
             modifier = Modifier
                 .clickable {
@@ -131,6 +139,7 @@ fun BuscarClienteConPermisos(
                 modifier = Modifier.padding(start = 4.dp)
             )
         }
+         */
 
         if (rutasBuscandoTaxi != null) {
             ListaDeRutas(

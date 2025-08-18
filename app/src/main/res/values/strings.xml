@@ -94,4 +94,6 @@
     <string name="llegaraEn">Llegará en</string>
     <string name="heLlegadoAlDestino">He llegado al destino</string>
     <string name="rutaCancelada">Ruta cancelada</string>
+    <string name="buscarCliente">Buscar cliente</string>
+    <string name="crearRuta">Crear ruta</string>
 </resources>

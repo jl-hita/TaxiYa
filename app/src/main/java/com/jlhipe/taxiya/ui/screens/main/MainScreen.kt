@@ -58,6 +58,7 @@ fun MainScreen(
     //val usuario = loginViewModel.user.value
     val user by loginViewModel.user.observeAsState()
     val esConductor = loginViewModel.esConductor.collectAsState()
+    var textoBotonAccion: String = ""
 
     AppScaffold(
         showBackArrow = false,
@@ -75,6 +76,7 @@ fun MainScreen(
         },
         loginViewModel = loginViewModel,
         navController = navController,
+        textoBotonAccion = textoBotonAccion,
     ) {
         val logeado by loginViewModel.logeado.observeAsState(initial = true)
         if (!logeado) {
@@ -86,7 +88,8 @@ fun MainScreen(
         val rutas by rutaViewModel.rutas.observeAsState(initial = emptyList())
         //val rutas = rutaViewModel.rutas.value
         //val rutasFiltradas = remember(rutas) { rutas?.filter { it.visible && it.finalizado } }
-        val isLoadingRutas by rutaViewModel.isLoading.observeAsState(initial = false)
+        //val isLoadingRutas by rutaViewModel.isLoading.observeAsState(initial = false)
+        val isLoadingRutas by rutaViewModel.isLoading.observeAsState(initial = true)
         val rutaActiva by rutaViewModel.selectedRuta.observeAsState()
         //val user = loginViewModel.currentUserId
         //val user = loginViewModel.user.value!!.id
@@ -118,6 +121,8 @@ fun MainScreen(
                 CircularProgressIndicator()
             }
         }
+
+        textoBotonAccion = if (esConductor.value) stringResource(R.string.buscarCliente) else stringResource(R.string.crearRuta)
 
         // Navegación cuando hay ruta activa
         LaunchedEffect(rutaActiva) {

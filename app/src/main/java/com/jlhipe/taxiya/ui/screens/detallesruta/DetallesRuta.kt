@@ -54,6 +54,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
@@ -62,6 +63,7 @@ import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.theme.BlueRibbon
+//import com.jlhipe.taxiya.ui.theme.BlueRibbon
 import com.jlhipe.taxiya.ui.theme.Purple40
 import com.jlhipe.taxiya.ui.theme.RacingBlue
 import com.jlhipe.taxiya.ui.theme.RutaCancelada
@@ -133,7 +135,10 @@ fun DetallesRuta(
         Color.White
     }
     val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
-    var showDialog by remember { mutableStateOf(false) }
+
+    var showCancelarDialog by remember { mutableStateOf(false) }
+    var showEliminarDialog by remember { mutableStateOf(false) }
+
     val coroutineScope = rememberCoroutineScope()
 
     var cliente by remember { mutableStateOf<String?>(null) }
@@ -352,7 +357,7 @@ fun DetallesRuta(
                         }
                         RutaInfoItem(
                             stringResource(R.string.distancia),
-                            "%.1f km".format(ruta.distancia.toDouble() / 1000),
+                            "%.1f km".format(ruta.distanciaOriginal.toDouble() / 1000),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -432,6 +437,7 @@ fun DetallesRuta(
                         modifier = Modifier.fillMaxSize(),
                         cameraPositionState = cameraPositionState
                     ) {
+                        //Marcadores de cliente, conductor y destino
                         Marker(
                             position = clientePos.value,
                             title = titleCliente,
@@ -447,6 +453,26 @@ fun DetallesRuta(
                             title = stringResource(R.string.destino),
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                         )
+                        //Listas de lineas para dibujar las rutas de conductor a cliente y de cliente a destino
+                        //Polyline conductor -> cliente
+                        if(esConductor.value && ruta.polylineCliente.isNotEmpty()) {
+                            val puntos = ruta.polylineCliente.map { LatLng(it.latitude, it.longitude) }
+                            Polyline(
+                                points = puntos,
+                                color = Color.Blue,
+                                width = 10f
+                            )
+                        }
+
+                        //Polyline cliente -> destino
+                        if(ruta.polylineDestino.isNotEmpty()) {
+                            val puntos = ruta.polylineDestino.map { LatLng(it.latitude, it.longitude) }
+                            Polyline(
+                                points = puntos,
+                                color = Color.Blue,
+                                width = 10f
+                            )
+                        }
                     }
                 }
 
@@ -486,7 +512,7 @@ fun DetallesRuta(
                 Spacer(Modifier.height(12.dp))
 
                 Button(
-                    onClick = { showDialog = true },
+                    onClick = { showCancelarDialog = true },
                     //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     colors = ButtonDefaults.buttonColors(containerColor = RutaCancelada),
                     modifier = Modifier.fillMaxWidth()
@@ -496,21 +522,21 @@ fun DetallesRuta(
             }
 
             // Diálogo de confirmación
-            if (showDialog) {
+            if (showCancelarDialog) {
                 AlertDialog(
-                    onDismissRequest = { showDialog = false },
+                    onDismissRequest = { showCancelarDialog = false },
                     title = { Text(stringResource(R.string.confirmarCancelar)) },
                     text = { Text(stringResource(R.string.estasSeguroCancelarRuta)) },
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                showDialog = false
+                                showCancelarDialog = false
                                 Log.d("DetallesRuta", "Finalizando ruta $ruta")
                                 coroutineScope.launch {
                                     rutaViewModel.marcarRutaCancelada(ruta.id)
-                                    rutaViewModel.loadRutas()
-                                    navController.navigate(Routes.Main)
-                                    rutaViewModel.deseleccionarRuta()
+                                    //rutaViewModel.loadRutas()
+                                    //rutaViewModel.deseleccionarRuta()
+                                    //navController.navigate(Routes.Main)
                                 }
                             }
                         ) {
@@ -520,7 +546,7 @@ fun DetallesRuta(
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDialog = false }) {
+                        TextButton(onClick = { showCancelarDialog = false }) {
                             Text(stringResource(R.string.cancelar))
                         }
                     }
@@ -535,6 +561,8 @@ fun DetallesRuta(
 
                 Button(
                     onClick = {
+                        showEliminarDialog = true
+                        /*
                         //Uso coroutine scope porque si no se puede navegar antes de eliminar y cargar rutas
                         coroutineScope.launch {
                             //Eliminar la ruta
@@ -549,12 +577,51 @@ fun DetallesRuta(
                             navController.navigate(Routes.Main)
 
                         }
+                         */
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Purple40)
                 ) {
                     Text(stringResource(R.string.eliminarRuta))
                 }
+            }
+
+            // Diálogo de confirmación
+            if (showEliminarDialog) {
+                AlertDialog(
+                    onDismissRequest = { showEliminarDialog = false },
+                    title = { Text(stringResource(R.string.confirmarCancelar)) },
+                    text = { Text(stringResource(R.string.estasSeguroCancelarRuta)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showEliminarDialog = false
+                                //Uso coroutine scope porque si no se puede navegar antes de eliminar y cargar rutas
+                                coroutineScope.launch {
+                                    //Eliminar la ruta
+                                    rutaViewModel.eliminarRuta(ruta.id, esConductor.value)
+                                    delay(100)
+                                    //Recargar rutas
+                                    //rutaViewModel.loadRutas()
+                                    //delay(100)
+                                    //Deseleccionar ruta
+                                    rutaViewModel.deseleccionarRuta()
+                                    //Navego al menú principal
+                                    navController.navigate(Routes.Main)
+                                }
+                            }
+                        ) {
+                            Text(stringResource(R.string.siEliminar),
+                                //color = MaterialTheme.colorScheme.error) //"Sí, eliminar"
+                                color = RutaCancelada)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showCancelarDialog = false }) {
+                            Text(stringResource(R.string.cancelar))
+                        }
+                    }
+                )
             }
 
             /**
@@ -786,16 +853,20 @@ fun DetallesRuta(
                 LaunchedEffect(true) {
                     localizacionViewModel.stopLocationUpdates()
                 }
+            }
 
-                /**
-                 * Botón para volver a MainScreen
-                 */
+            /**
+             * Botón para volver a MainScreen
+             */
+            if(ruta.finalizado) {
+                Spacer(Modifier.height(12.dp))
+
                 Button(
                     onClick = {
                         coroutineScope.launch {
-                            rutaViewModel.loadRutas()
-                            navController.navigate(Routes.Main)
+                            //rutaViewModel.loadRutas()
                             rutaViewModel.deseleccionarRuta()
+                            navController.navigate(Routes.Main)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
