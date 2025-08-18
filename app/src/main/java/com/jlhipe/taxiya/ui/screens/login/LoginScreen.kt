@@ -6,12 +6,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -63,7 +65,7 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
         }
     }
 
-    val context = LocalContext.current
+    //val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -85,7 +87,7 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
         OutlinedTextField(
             value = email.value,
             onValueChange = { loginViewModel.updateEmail(it) },
-            placeholder = { Text("Email") },
+            placeholder = { Text(stringResource(R.string.email)) },
             singleLine = true,
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(0.8f)
@@ -95,7 +97,7 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
         OutlinedTextField(
             value = password.value,
             onValueChange = { loginViewModel.updatePassword(it) },
-            placeholder = { Text("Password") },
+            placeholder = { Text(stringResource(R.string.password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
@@ -107,31 +109,42 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
             Text(text = error, color = Color.Red)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Botón Login
-        Button(onClick = {
-            CoroutineScope(Dispatchers.IO).launch {
-                loginViewModel.signIn(email.value, password.value)
+        Row(
+            modifier = Modifier.fillMaxWidth(0.8F),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            // Botón Login
+            Button(
+                onClick = {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        loginViewModel.signIn(email.value, password.value)
+                    }
+                },
+                modifier = Modifier.weight(0.2f)
+            ) {
+                Text(stringResource(R.string.iniciarSesion))
             }
-        }) {
-            Text("Sign In")
+
+            Spacer(modifier = Modifier.width(24.dp))
+
+            // Botón Registro
+            Button(
+                onClick = {
+                    navController.navigate(Routes.Registro)
+                },
+                modifier = Modifier.weight(0.2f)
+            ) {
+                Text(stringResource(R.string.crearCuenta))
+            }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Botón Registro
-        Button(onClick = {
-            navController.navigate(Routes.Registro)
-        }) {
-            Text("Sign Up")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Login con Google
         AuthenticationButton(
-            modifier = Modifier.fillMaxWidth(0.8F),
+            modifier = Modifier.fillMaxWidth(0.83F),
             buttonText = R.string.loginConGoogle,
             //onRequestResult = { loginViewModel.setLogeado(true) }
         ) { credential ->
@@ -152,13 +165,6 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
             }
         }
          */
-
-        //TODO BORRAME
-        Button(onClick = {
-            loginViewModel.probarLogin()
-        }) {
-            Text("Pruebame")
-        }
     }
 }
 

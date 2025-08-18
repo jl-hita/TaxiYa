@@ -36,8 +36,8 @@ fun RutaItem(
     buscaTaxi: Boolean = false, //Si buscaTaxi == true -> Muestra distancia entre cliente y taxista
     onClick: () -> Unit
 ) {
-    val distanciaKm = remember(ruta.distancia) {
-        "%.2f km".format(ruta.distancia / 1000.0)
+    val distanciaKm = remember(ruta.distanciaOriginal) {
+        "%.2f km".format(ruta.distanciaOriginal / 1000.0)
     }
     val duracionFormateada = remember(ruta.duracion) {
         formatDuration(ruta.duracion)

@@ -22,13 +22,28 @@
           }
         },
         {
+          "client_id": "308312830500-kfdu6dkpenupjkrdr950h1cquiehlndn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jlhipe.taxiya",
+            "certificate_hash": "b7bcdd926715ee783e7164d29f59ce984881f403"
+          }
+        },
+        {
+          "client_id": "308312830500-ksefuqmn31rhelrgs52l60j1po0v3omm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jlhipe.taxiya",
+            "certificate_hash": "3c8d1549d6ad02688055afb73f80c0c6356f62a9"
+          }
+        },
+        {
           "client_id": "308312830500-10ocr79b75r4at2294bi4r2a913b8eoe.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-		  //"current_key": "AIzaSyA8LBmRK7QSFSrXYSHVkFOOB_6br6rADAM"
           "current_key": "AIzaSyAY6PXmIrCMe7qyUmRsZd_vESZnw9MhXPQ"
         }
       ],

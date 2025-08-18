@@ -12,12 +12,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
@@ -55,6 +61,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import androidx.compose.material3.FloatingActionButton
 
 @OptIn(FlowPreview::class)
 @RequiresPermission(
@@ -176,11 +183,19 @@ fun NuevaRutaConPermisos(
     AppScaffold(
         showBackArrow = true,
         onBlackArrowClick = { navController.popBackStack() },
+        //showActionButton = true,
         showActionButton = false,
-        botonAccion = { navController.navigate(Routes.NuevaRuta) },
+        botonAccion = {
+            // Animar la cámara a la posición del usuario
+            scope.launch {
+                cameraPositionState.animate(
+                    update = CameraUpdateFactory.newLatLngZoom(userLocation.value, 16f)
+                )
+            }
+        },
         loginViewModel = loginViewModel,
         navController = navController,
-        textoBotonAccion = ""
+        //textoBotonAccion = ""
     ) {
         if (localizacionViewModel.tienePermisosGPS()) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -217,6 +232,63 @@ fun NuevaRutaConPermisos(
                         .fillMaxWidth(0.9f)
                 )
 
+                //Botones sobre el mapa
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    //Botón "Buscar Taxi"
+                    Button(
+                        onClick = {
+                            ruta.cliente = loginViewModel.user.value!!.id
+                            ruta.conductor = ""
+                            ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
+                            scope.launch {
+                                ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context, mapssdkkey)
+                                val idInsertada = rutaViewModel.insertaRutaFirebase(ruta, routesApiKey)
+                                if (idInsertada != null) {
+                                    rutaViewModel.actualizarPuedeVolver(false)
+                                    navController.navigate(Routes.DetallesRuta)
+                                } else {
+                                    destinationText.value = errorAlCrearRuta
+                                    delay(2000)
+                                    navController.navigate(Routes.Main)
+                                }
+                            }
+                        },
+                        enabled = userLocation.value != LatLng(0.0, 0.0) &&
+                                (ruta.destinoGeo != GeoPoint(0.0, 0.0) || ruta.destino.isNotBlank()),
+                        modifier = Modifier
+                            .padding(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Blue, // Fondo del botón
+                            contentColor = Color.White   // Texto en blanco
+                        ),
+                        shape = RoundedCornerShape(8.dp) // Bordes redondeados
+                    ) {
+                        Text(text = stringResource(R.string.buscaTaxiLibre))
+                    }
+
+                    //Botón "Centrar cámara"
+                    FloatingActionButton(
+                        onClick = {
+                            scope.launch {
+                                cameraPositionState.animate(
+                                    CameraUpdateFactory.newLatLngZoom(userLocation.value, 16f)
+                                )
+                            }
+                        },
+                        containerColor = Color.White,
+                        contentColor = Color.Black,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Icon(Icons.Default.MyLocation, contentDescription = stringResource(R.string.centrarMapa))
+                    }
+                }
+
+                /*
                 //Botón para crear ruta
                 Button(
                     onClick = {
@@ -251,88 +323,28 @@ fun NuevaRutaConPermisos(
                 ) {
                     Text(text = stringResource(R.string.buscaTaxiLibre))
                 }
-            }
-        } else {
-            Text(
-                text = stringResource(R.string.necesitaPermisos),
-                modifier = Modifier.padding(32.dp)
-            )
-        }
-    }
-
-    /*
-    AppScaffold(
-        showBackArrow = true,
-        onBlackArrowClick = { navController.popBackStack() },
-        showActionButton = false,
-        botonAccion = { navController.navigate(Routes.NuevaRuta) },
-        loginViewModel = loginViewModel,
-        navController = navController,
-    ) {
-        if (localizacionViewModel.tienePermisosGPS()) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                GoogleMap(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(16.dp),
-                    cameraPositionState = cameraPositionState,
-                    onMapClick = { clickedLocation ->
-                        destinoLocation.value = clickedLocation
-                        localizacionViewModel.setDestino(clickedLocation.latitude, clickedLocation.longitude)
-                        scope.launch {
-                            //ruta.destinoGeo = clickedLocation
-                            ruta.destinoGeo = GeoPoint(clickedLocation.latitude, clickedLocation.longitude)
-                            //ruta.destino = rutaViewModel.getAddressFromLatLng(clickedLocation, mapssdkkey)
-                            ruta.destino = rutaViewModel.obtenerDireccion(ruta.destinoGeo, context)
-                            Log.d("NuevaRuta", "Coordenadas obtenidas: lat=${clickedLocation.latitude}, lng=${clickedLocation.longitude}")
-                            Log.d("NuevaRuta", "Dirección: ${ruta.destino}")
-                            cameraPositionState.animate(CameraUpdateFactory.newLatLng(clickedLocation))
-                        }
-                    }
-                ) {
-                    Marker(position = userLocation.value, title = stringResource(R.string.tu))
-                    Marker(position = destinoLocation.value, title = stringResource(R.string.destino))
-                }
-
-                //var searchJob: Job? = null
-
-                OutlinedTextField(
-                    value = destinationText.value,
-                    onValueChange = { destinationText.value = it },
-                    label = { Text(stringResource(R.string.destino)) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                Button(
+                 */
+                /*
+                //Botón de centrar cámara
+                FloatingActionButton(
                     onClick = {
-                        //ruta.cliente = loginViewModel.currentUserId
-                        ruta.cliente = loginViewModel.user.value!!.id
-                        ruta.conductor = ""
-                        ruta.origenGeo = GeoPoint(userLocation.value.latitude, userLocation.value.longitude)
                         scope.launch {
-                            ruta.origen = rutaViewModel.obtenerDireccion(ruta.origenGeo, context)
-                            //val idInsertada = rutaViewModel.insertaRutaFirebase(mapssdkkey, ruta, routesApiKey)
-                            val idInsertada = rutaViewModel.insertaRutaFirebase(ruta, routesApiKey)
-                            if (idInsertada != null) {
-                                rutaViewModel.actualizarPuedeVolver(false)
-                                navController.navigate(Routes.DetallesRuta)
-                            } else {
-                                destinationText.value = errorAlCrearRuta
-                                delay(2000)
-                                navController.navigate(Routes.Main)
-                            }
+                            cameraPositionState.animate(
+                                update = CameraUpdateFactory.newLatLngZoom(userLocation.value, 16f)
+                            )
                         }
                     },
-                    enabled = userLocation.value != LatLng(0.0, 0.0) &&
-                            (ruta.destinoGeo != GeoPoint(0.0, 0.0) || ruta.destino.isNotBlank()),
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd) // esquina inferior derecha
+                        .padding(16.dp),
+                    //backgroundColor = Color.LightGray
                 ) {
-                    Text(text = stringResource(R.string.buscaTaxiLibre))
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = stringResource(R.string.centrarMapa)//"Centrar mapa"
+                    )
                 }
+                 */
             }
         } else {
             Text(
@@ -341,5 +353,4 @@ fun NuevaRutaConPermisos(
             )
         }
     }
-    */
 }

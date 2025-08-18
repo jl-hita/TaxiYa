@@ -58,7 +58,7 @@ fun MainScreen(
     //val usuario = loginViewModel.user.value
     val user by loginViewModel.user.observeAsState()
     val esConductor = loginViewModel.esConductor.collectAsState()
-    var textoBotonAccion: String = ""
+    //var textoBotonAccion: String = ""
 
     AppScaffold(
         showBackArrow = false,
@@ -76,7 +76,7 @@ fun MainScreen(
         },
         loginViewModel = loginViewModel,
         navController = navController,
-        textoBotonAccion = textoBotonAccion,
+        //textoBotonAccion = textoBotonAccion,
     ) {
         val logeado by loginViewModel.logeado.observeAsState(initial = true)
         if (!logeado) {
@@ -122,7 +122,7 @@ fun MainScreen(
             }
         }
 
-        textoBotonAccion = if (esConductor.value) stringResource(R.string.buscarCliente) else stringResource(R.string.crearRuta)
+        //textoBotonAccion = if (esConductor.value) stringResource(R.string.buscarCliente) else stringResource(R.string.crearRuta)
 
         // Navegación cuando hay ruta activa
         LaunchedEffect(rutaActiva) {

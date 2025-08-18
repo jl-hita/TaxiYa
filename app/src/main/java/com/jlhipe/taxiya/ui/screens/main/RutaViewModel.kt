@@ -73,6 +73,9 @@ class RutaViewModel: ViewModel() {
 
     private var claveAPICalculoDistanciaDuracion: String = ""
 
+    private var _primeraCargaTaxis = MutableLiveData<Boolean>(true)
+    val primeraCargaTaxis: LiveData<Boolean> = _primeraCargaTaxis
+
     //Variable para manejar permisos
     val visiblePermissionDialogeQueue = mutableStateListOf<String>()
 
@@ -579,11 +582,16 @@ class RutaViewModel: ViewModel() {
                     .take(5)
 
                 _rutasBuscandoTaxi.value = rutas
+                _primeraCargaTaxis.value = false
             }
             .addOnFailureListener { e ->
                 Log.e("RutaViewModel", "Error cargando rutas", e)
                 _rutasBuscandoTaxi.value = emptyList()
             }
+    }
+
+    fun setPrimeraCarga(carga: Boolean) {
+        _primeraCargaTaxis.value = carga
     }
 
     //Calcula la distancia entre dos LatLng en metros

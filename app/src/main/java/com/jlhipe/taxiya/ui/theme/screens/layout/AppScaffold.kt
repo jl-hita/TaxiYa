@@ -38,7 +38,7 @@ fun AppScaffold(
     botonAccion: () -> Unit = {},  //Botón de acción (nueva ruta)
     loginViewModel: LoginViewModel,
     navController: NavController,
-    textoBotonAccion: String,
+    //textoBotonAccion: String,
     content: @Composable () -> Unit         // Se le pasa el contenido principal mediante parámetro
 ) {
     Scaffold(
@@ -56,7 +56,7 @@ fun AppScaffold(
                     onClick = botonAccion
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.nuevaRuta))
-                    Text(textoBotonAccion)
+                    //Text(textoBotonAccion)
                 }
             }
         },

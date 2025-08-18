@@ -32,13 +32,15 @@
 //HECHO -> Corregir cuando "En ruta hacia el destino" -> Duración = 00 min
 //HECHO -> dibujar rutas en el mapa
 //HECHO -> Añadir confirmación al botón de "Eliminar ruta"
+//HECHO -> En la pantalla de buscar rutas como conductor, que se recargue cada X segundos
 
-//TODO En la pantalla de buscar rutas como conductor, que se recargue cada X segundos
 //TODO Comprobar que la cámara de ubicación en el mapa al crear ruta o buscar cliente sea correcta
+//TODO Si falla la generación de polylines, reintentar al menos una vez
 //TODO Botón de reiniciar ruta cancelada
 //TODO El control de distancias se debe hacer en el viewModel, con la actualización de ubicación. No se debe hacer en el composable
 //TODO Cambiar icono floatingAction "+" por texto "crear ruta" o "buscar cliente" <- investigar por qué no funciona o volver a dejar solo icono
 //TODO Implementar Botón para marcar conductor como activo/inactivo y que al usuario le avise si no hay conductores en un radio de km (Alternativa -> Que mientras esté la app activa el usuario conste como activo en firebase/usuarios)
 //TODO Extra -> Al finalizar ruta, dar al conductor la posibilidad de dirigir a su punto original de antes de aceptar ruta
 //TODO Extra -> Implementar notificaciones para avisar de ruta cancelada, conductor en posicion de cliente, etc
-//TODO Extra -> Al hacer clic en el mapa, que se muestre un mapa grande con la ruta dibujada
+//TODO Extra -> Al hacer clic en el mapa en DetallesRuta, que se muestre un mapa grande con la ruta dibujada
+//TODO Extra -> Añadir algún tipo de mensagería entre cliente y conductor
