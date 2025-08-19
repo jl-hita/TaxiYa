@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "308312830500",
+    "project_id": "taxiya-c3936",
+    "storage_bucket": "taxiya-c3936.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:308312830500:android:09a9cb10e3c829c734deb1",
+        "android_client_info": {
+          "package_name": "com.jlhipe.taxiya"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "308312830500-diempv5accq2t5qgkj1t9t0j43o5db28.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jlhipe.taxiya",
+            "certificate_hash": "aba10ec9dc1f691580b6c1477f4421c0255dd1d9"
+          }
+        },
+        {
+          "client_id": "308312830500-10ocr79b75r4at2294bi4r2a913b8eoe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+		  //"current_key": "AIzaSyA8LBmRK7QSFSrXYSHVkFOOB_6br6rADAM"
+          "current_key": "AIzaSyAY6PXmIrCMe7qyUmRsZd_vESZnw9MhXPQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "308312830500-10ocr79b75r4at2294bi4r2a913b8eoe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

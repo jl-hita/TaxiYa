@@ -30,3 +30,13 @@ val RacingBlue = Color(0xFF04AEEC)
 val BlueRibbon = Color(0xFF043AEC)
 val BrightTurquoise = Color(0xFF04ECB6)
 val PaleFrost = Color(0xFFC5E4EF)
+
+//Colores para el modo oscuro
+val RutaCanceladaDark = Color(0xFFFF6E5A)
+val RutaExitosaDark = Color(0xFF61D062)
+val RutaExitosaLigeroDark = Color(0xFF74E074)
+val RutaEnMarchaDark = Color(0xFF4CD7FF)
+val RutaDesasignarDark = Color(0xFFFFB84D)
+val RutaEnMarchaClaritoDark = Color(0xFF64CFFF)
+val RutaCanceladaClaritoDark = Color(0xFFFF9A88)
+val RutaExitosaClaritoDark = Color(0xFF8EF48E)

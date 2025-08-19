@@ -1,6 +1,8 @@
 package com.jlhipe.taxiya.ui.screens.detallesruta
 
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,15 +57,24 @@ import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.theme.BlueRibbon
+import com.jlhipe.taxiya.ui.theme.Pink40
 //import com.jlhipe.taxiya.ui.theme.BlueRibbon
 import com.jlhipe.taxiya.ui.theme.Purple40
+import com.jlhipe.taxiya.ui.theme.Purple80
+import com.jlhipe.taxiya.ui.theme.RacingBlue
 import com.jlhipe.taxiya.ui.theme.RutaCancelada
 import com.jlhipe.taxiya.ui.theme.RutaCanceladaClarito
+import com.jlhipe.taxiya.ui.theme.RutaCanceladaClaritoDark
+import com.jlhipe.taxiya.ui.theme.RutaCanceladaDark
 import com.jlhipe.taxiya.ui.theme.RutaDesasignar
+import com.jlhipe.taxiya.ui.theme.RutaDesasignarDark
 import com.jlhipe.taxiya.ui.theme.RutaEnMarcha
 import com.jlhipe.taxiya.ui.theme.RutaEnMarchaClarito
+import com.jlhipe.taxiya.ui.theme.RutaEnMarchaClaritoDark
+import com.jlhipe.taxiya.ui.theme.RutaEnMarchaDark
 import com.jlhipe.taxiya.ui.theme.RutaExitosa
 import com.jlhipe.taxiya.ui.theme.RutaExitosaClarito
+import com.jlhipe.taxiya.ui.theme.RutaExitosaDark
 import com.jlhipe.taxiya.ui.theme.screens.layout.NonAppScaffold
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -101,22 +112,36 @@ fun DetallesRuta(
 
     //Cambiamos el color de fondo según estado de la ruta
     val backgroundColor = if (rutaActiva?.finalizado == false) {
-        //RutaEnMarcha //TODO quizás cambiar a blanco
-        //Color.White
-        RutaEnMarchaClarito
+        if(isSystemInDarkTheme())
+            RutaEnMarchaClaritoDark
+        else
+            RutaEnMarchaClarito
     } else if (rutaActiva?.cancelada == true) {
-        //RutaCancelada
-        //RojoClarito
-        RutaCanceladaClarito
+        if(isSystemInDarkTheme())
+            RutaCanceladaClaritoDark
+        else
+            RutaCanceladaClarito
     } else if (rutaActiva?.enDestino == true) {
-        //RutaExitosa
-        //BlueClarito
-        RutaExitosaClarito
+        if(isSystemInDarkTheme())
+            RutaExitosaDark
+        else
+            RutaExitosa
     } else {
-        Color.White
+        if(isSystemInDarkTheme())
+            Color.Black
+        else
+            Color.White
     }
-    val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
 
+    //Colores para los botones, según modo
+    val colorBotonCancelar = if(isSystemInDarkTheme()) RutaCanceladaDark else RutaCancelada
+    val colorBotonEnMarcha = if(isSystemInDarkTheme()) RutaEnMarchaDark else RutaEnMarcha
+    val colorBotonEnCliente = if(isSystemInDarkTheme()) BlueRibbon else RacingBlue
+    val colorBotonEnDestino = if(isSystemInDarkTheme()) RutaExitosaDark else RutaExitosa
+    val colorBotonAsignar = if(isSystemInDarkTheme()) RutaDesasignarDark else RutaDesasignar
+    val colorBotonEliminar = if(isSystemInDarkTheme()) Pink40 else Purple40
+
+    val ubicacionActualizada by localizacionViewModel.ubicacion.observeAsState()
     var showCancelarDialog by remember { mutableStateOf(false) }
     var showEliminarDialog by remember { mutableStateOf(false) }
 
@@ -182,7 +207,8 @@ fun DetallesRuta(
                         navController.popBackStack()
                     }
                 }
-            }
+            },
+            modifier = Modifier.background(backgroundColor)
         ) {
             val destinoPos = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude)
 
@@ -221,6 +247,30 @@ fun DetallesRuta(
                         }
                     }
 
+                    /**
+                     * Si la ruta ha terminado se muestra la hora de llegada
+                     * Si el conductor va hacia el cliente o hacia el destino se muestra un cálculo del tiempo total (conductor->cliente + trayecto a destino)
+                     */
+                    if (ruta.finalizado && ruta.momentoLlegada != null) {
+                        RutaInfoItem(
+                            stringResource(R.string.llegada),
+                            formatoFecha.format(Date(ruta.momentoLlegada!! * 1000))
+                        )
+                        //} else if (ruta.haciaDestino && ruta.momentoSalida != null && ruta.duracion != null) {
+                    } else if(ruta.haciaCliente) {
+                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
+                        RutaInfoItem(
+                            stringResource(R.string.horaEstimadaLlegada),
+                            formatoFecha.format(estimada)
+                        )
+                    } else if(ruta.haciaDestino) {
+                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracion.toLong()) * 1000)
+                        RutaInfoItem(
+                            stringResource(R.string.horaEstimadaLlegada),
+                            formatoFecha.format(estimada)
+                        )
+                    }
+
                     //Si el usuario es conductor se muestra el nombre del cliente
                     if(esConductor.value) {
                         LaunchedEffect(ruta.cliente) {
@@ -244,30 +294,6 @@ fun DetallesRuta(
                         RutaInfoItem(
                             stringResource(R.string.conductor),
                             conductor ?: "Sin Nombre"
-                        )
-                    }
-
-                    /**
-                     * Si la ruta ha terminado se muestra la hora de llegada
-                     * Si el conductor va hacia el cliente o hacia el destino se muestra un cálculo del tiempo total (conductor->cliente + trayecto a destino)
-                     */
-                    if (ruta.finalizado && ruta.momentoLlegada != null) {
-                        RutaInfoItem(
-                            stringResource(R.string.llegada),
-                            formatoFecha.format(Date(ruta.momentoLlegada!! * 1000))
-                        )
-                        //} else if (ruta.haciaDestino && ruta.momentoSalida != null && ruta.duracion != null) {
-                    } else if(ruta.haciaCliente) {
-                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
-                        RutaInfoItem(
-                            stringResource(R.string.horaEstimadaLlegada),
-                            formatoFecha.format(estimada)
-                        )
-                    } else if(ruta.haciaDestino) {
-                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracion.toLong()) * 1000)
-                        RutaInfoItem(
-                            stringResource(R.string.horaEstimadaLlegada),
-                            formatoFecha.format(estimada)
                         )
                     }
 
@@ -545,8 +571,8 @@ fun DetallesRuta(
 
                 Button(
                     onClick = { showCancelarDialog = true },
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaCancelada),
+                    //colors = ButtonDefaults.buttonColors(containerColor = RutaCancelada),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonCancelar),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(stringResource(R.string.cancelarRuta), color = Color.White)
@@ -592,7 +618,8 @@ fun DetallesRuta(
                         showEliminarDialog = true
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple40)
+                    //colors = ButtonDefaults.buttonColors(containerColor = Purple40)
+                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonEliminar),
                 ) {
                     Text(stringResource(R.string.eliminarRuta))
                 }
@@ -629,7 +656,7 @@ fun DetallesRuta(
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showCancelarDialog = false }) {
+                        TextButton(onClick = { showEliminarDialog = false }) {
                             Text(stringResource(R.string.noAnular))
                         }
                     }
@@ -653,10 +680,8 @@ fun DetallesRuta(
                         //navController.navigate(Routes.Main)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaEnMarcha),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
+                    //colors = ButtonDefaults.buttonColors(containerColor = RutaEnMarcha),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonAsignar),
                 ) {
                     Text(stringResource(R.string.aceptarCliente)) //TODO quizás cambiar texto a blanco o a negro
                 }
@@ -676,10 +701,8 @@ fun DetallesRuta(
                         //navController.navigate(Routes.Main)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaDesasignar),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
+                    //colors = ButtonDefaults.buttonColors(containerColor = RutaDesasignar),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonAsignar),
                 ) {
                     Text(stringResource(R.string.rechazarRuta))
                 }
@@ -701,10 +724,8 @@ fun DetallesRuta(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaEnMarcha),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
+                    //colors = ButtonDefaults.buttonColors(containerColor = RutaEnMarcha),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonEnMarcha),
                 ) {
                     Text(stringResource(R.string.iniciarRuta))
                 }
@@ -725,10 +746,8 @@ fun DetallesRuta(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = BlueRibbon),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
+                    //colors = ButtonDefaults.buttonColors(containerColor = BlueRibbon),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonEnCliente),
                 ) {
                     Text(stringResource(R.string.iniciarRutaHaciaDestino), color = Color.White)
                 }
@@ -749,10 +768,8 @@ fun DetallesRuta(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaExitosa),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
+                    //colors = ButtonDefaults.buttonColors(containerColor = RutaExitosa),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorBotonEnDestino),
                 ) {
                     Text(stringResource(R.string.heLlegadoAlDestino), color = Color.Black)
                 }
@@ -774,6 +791,7 @@ fun DetallesRuta(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    //colors = ButtonDefaults.buttonColors(containerColor = colorBoton),
                 ) {
                     Text(stringResource(R.string.salir))
                 }

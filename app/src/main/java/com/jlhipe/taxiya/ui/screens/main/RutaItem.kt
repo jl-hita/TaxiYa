@@ -2,6 +2,7 @@ package com.jlhipe.taxiya.ui.screens.main
 
 import android.util.Log
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,8 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.model.Ruta
 import com.jlhipe.taxiya.ui.theme.RutaCancelada
+import com.jlhipe.taxiya.ui.theme.RutaCanceladaClarito
+import com.jlhipe.taxiya.ui.theme.RutaCanceladaClaritoDark
 import com.jlhipe.taxiya.ui.theme.RutaEnMarcha
+import com.jlhipe.taxiya.ui.theme.RutaEnMarchaClarito
+import com.jlhipe.taxiya.ui.theme.RutaEnMarchaClaritoDark
 import com.jlhipe.taxiya.ui.theme.RutaExitosa
+import com.jlhipe.taxiya.ui.theme.RutaExitosaDark
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -43,10 +49,34 @@ fun RutaItem(
         formatDuration(ruta.duracion)
     }
 
+    /*
     val backgroundColor = if(ruta.finalizado && ruta.cancelada) RutaCancelada
         else if(ruta.finalizado /* && ruta.enDestino*/) RutaExitosa
         else if(!ruta.finalizado) RutaEnMarcha
         else Color.White
+     */
+
+    val backgroundColor = if (ruta.finalizado == false) {
+        if(isSystemInDarkTheme())
+            RutaEnMarchaClaritoDark
+        else
+            RutaEnMarchaClarito
+    } else if (ruta.cancelada == true) {
+        if(isSystemInDarkTheme())
+            RutaCanceladaClaritoDark
+        else
+            RutaCanceladaClarito
+    } else if (ruta.enDestino == true) {
+        if(isSystemInDarkTheme())
+            RutaExitosaDark
+        else
+            RutaExitosa
+    } else {
+        if(isSystemInDarkTheme())
+            Color.Black
+        else
+            Color.White
+    }
 
     val colorTexto = if((ruta.finalizado && ruta.cancelada) || !ruta.finalizado) Color.White else Color.Black
 

@@ -180,7 +180,7 @@ class RutaViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 val db = FirebaseFirestore.getInstance()
-                selectedRuta.value?.let {
+                _selectedRuta.value?.let {
                     db.collection("rutas")
                         .document(it.id)
                         .update("distanciaConductor", distancia)
@@ -196,7 +196,7 @@ class RutaViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 val db = FirebaseFirestore.getInstance()
-                selectedRuta.value?.let {
+                _selectedRuta.value?.let {
                     db.collection("rutas")
                         .document(it.id)
                         //.update("distanciaConductor", distancia)
@@ -219,7 +219,7 @@ class RutaViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 val db = FirebaseFirestore.getInstance()
-                selectedRuta.value?.let {
+                _selectedRuta.value?.let {
                     db.collection("rutas")
                         .document(it.id)
                         .update("distanciaDestino", distancia)
@@ -236,7 +236,7 @@ class RutaViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 val db = FirebaseFirestore.getInstance()
-                selectedRuta.value?.let {
+                _selectedRuta.value?.let {
                     db.collection("rutas")
                         .document(it.id)
                         //.update("distanciaDestino", distancia)
@@ -256,7 +256,7 @@ class RutaViewModel: ViewModel() {
 
     //Cuando la distancia Conductor/Cliente sea menor a 25 metros se inicia ruta hacia destino
     fun comprobarSiIniciaDestino() {
-        selectedRuta.value?.let {
+        _selectedRuta.value?.let {
             if (!it.finalizado && it.asignado && it.haciaCliente && !it.haciaDestino && it.distanciaConductor < 25) {
                 iniciarRutaHaciaDestino()
             }
@@ -265,7 +265,7 @@ class RutaViewModel: ViewModel() {
 
     //Inicia ruta hacia Destino
     fun iniciarRutaHaciaDestino() {
-        selectedRuta.value?.let {
+        _selectedRuta.value?.let {
             // Marcar haciaDestino a true solo una vez
             it.haciaCliente = false
             it.haciaDestino = true
@@ -275,7 +275,7 @@ class RutaViewModel: ViewModel() {
             // Guardar cambios en Firebase
             viewModelScope.launch {
                 try {
-                    selectedRuta.value?.let {
+                    _selectedRuta.value?.let {
                         FirebaseFirestore.getInstance().collection("rutas")
                             .document(it.id)
                             .update(
@@ -313,7 +313,7 @@ class RutaViewModel: ViewModel() {
             // Guardar cambios en Firebase
             viewModelScope.launch {
                 try {
-                    selectedRuta.value?.let {
+                    _selectedRuta.value?.let {
                         FirebaseFirestore.getInstance().collection("rutas")
                             .document(it.id)
                             .update(
@@ -338,7 +338,7 @@ class RutaViewModel: ViewModel() {
      */
     //Cuando la distancia Conductor/Cliente y destino sea menor a 25 metros se inicia ruta hacia destino
     fun comprobarSiLlegaADestino(forzar: Boolean = false) {
-        selectedRuta.value?.let {
+        _selectedRuta.value?.let {
             if (forzar || (!it.finalizado && it.asignado && it.haciaDestino && it.distancia < 25)) {
                 it.haciaDestino = false
                 it.enDestino = true
@@ -349,23 +349,20 @@ class RutaViewModel: ViewModel() {
                 // Guardar cambios en Firebase
                 viewModelScope.launch {
                     try {
-                        selectedRuta.value?.let {
-                            FirebaseFirestore.getInstance().collection("rutas")
-                                .document(it.id)
-                                .update(
-                                    mapOf(
-                                        "haciaDestino" to false,
-                                        "enDestino" to true,
-                                        "finalizado" to true,
-                                        "momentoLlegada" to it.momentoLlegada,
-                                        "duracion" to it.duracion
-                                    )
+                        FirebaseFirestore.getInstance().collection("rutas")
+                            .document(it.id)
+                            .update(
+                                mapOf(
+                                    "haciaDestino" to false,
+                                    "enDestino" to true,
+                                    "finalizado" to true,
+                                    "momentoLlegada" to it.momentoLlegada,
+                                    "duracion" to it.duracion
                                 )
-                                .await()
-                            //Cuando se llega a destino se para el tracking
-                            stopTrackingDistancia()
-
-                        }
+                            )
+                            .await()
+                        //Cuando se llega a destino se para el tracking
+                        stopTrackingDistancia()
                     } catch (e: Exception) {
                         Log.e("RutaViewModel", "Error al actualizar distancia conductor -> cliente", e)
                     }
@@ -438,7 +435,7 @@ class RutaViewModel: ViewModel() {
 
         viewModelScope.launch {
             try {
-                selectedRuta.value?.let {
+                _selectedRuta.value?.let {
                     FirebaseFirestore.getInstance().collection("rutas")
                         .document(it.id)
                         .update("posicionConductor",geoPoint)
@@ -460,7 +457,7 @@ class RutaViewModel: ViewModel() {
 
         viewModelScope.launch {
             try {
-                selectedRuta.value?.let {
+                _selectedRuta.value?.let {
                     FirebaseFirestore.getInstance().collection("rutas")
                         .document(it.id)
                         .update("origenGeo",geoPoint,)
