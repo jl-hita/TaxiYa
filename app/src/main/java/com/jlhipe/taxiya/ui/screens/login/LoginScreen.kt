@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,9 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,106 +68,112 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
         }
     }
 
-    //val context = LocalContext.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+        //color = Color.Red
     ) {
-        // Imagen
-        Image(
-            painter = painterResource(id = R.drawable.logo_inverso),
-            contentDescription = "Auth image",
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp, 4.dp)
-        )
-
-        // Email
-        OutlinedTextField(
-            value = email.value,
-            onValueChange = { loginViewModel.updateEmail(it) },
-            placeholder = { Text(stringResource(R.string.email)) },
-            singleLine = true,
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(0.8f)
-        )
-
-        // Password
-        OutlinedTextField(
-            value = password.value,
-            onValueChange = { loginViewModel.updatePassword(it) },
-            placeholder = { Text(stringResource(R.string.password)) },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(0.8f)
-        )
-
-        // Error
-        if (error.isNotEmpty()) {
-            Text(text = error, color = Color.Red)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(0.8F),
-            horizontalArrangement = Arrangement.Center
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Botón Login
-            Button(
-                onClick = {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        loginViewModel.signIn(email.value, password.value)
-                    }
-                },
-                modifier = Modifier.weight(0.2f)
+            val logo = if(isSystemInDarkTheme()) R.drawable.logo_inverso_dark else R.drawable.logo_inverso
+            // Imagen
+            Image(
+                painter = painterResource(id = logo),
+                contentDescription = "Auth image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp, 4.dp),
+                alpha = 1f
+            )
+
+            // Email
+            OutlinedTextField(
+                value = email.value,
+                onValueChange = { loginViewModel.updateEmail(it) },
+                placeholder = { Text(stringResource(R.string.email)) },
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(0.8f)
+            )
+
+            // Password
+            OutlinedTextField(
+                value = password.value,
+                onValueChange = { loginViewModel.updatePassword(it) },
+                placeholder = { Text(stringResource(R.string.password)) },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(0.8f)
+            )
+
+            // Error
+            if (error.isNotEmpty()) {
+                Text(text = error, color = Color.Red)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(0.8F),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(stringResource(R.string.iniciarSesion))
+                // Botón Login
+                Button(
+                    onClick = {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            loginViewModel.signIn(email.value, password.value)
+                        }
+                    },
+                    modifier = Modifier.weight(0.2f)
+                ) {
+                    Text(stringResource(R.string.iniciarSesion))
+                }
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                // Botón Registro
+                Button(
+                    onClick = {
+                        navController.navigate(Routes.Registro)
+                    },
+                    modifier = Modifier.weight(0.2f)
+                ) {
+                    Text(stringResource(R.string.crearCuenta))
+                }
             }
 
-            Spacer(modifier = Modifier.width(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón Registro
-            Button(
-                onClick = {
-                    navController.navigate(Routes.Registro)
-                },
-                modifier = Modifier.weight(0.2f)
-            ) {
-                Text(stringResource(R.string.crearCuenta))
+            // Login con Google
+            AuthenticationButton(
+                modifier = Modifier.fillMaxWidth(0.83F),
+                buttonText = R.string.loginConGoogle,
+                //onRequestResult = { loginViewModel.setLogeado(true) }
+            ) { credential ->
+                CoroutineScope(Dispatchers.Main).launch {
+                    loginViewModel.onSignInWithGoogle(credential)
+                }
             }
+            /*
+            AuthenticationButton(
+                buttonText = R.string.loginConGoogle,
+                modifier = Modifier.fillMaxWidth(0.8f)
+            ) { credential ->
+                val bundle = (credential as? CustomCredential)?.data ?: return@AuthenticationButton
+                val idToken = bundle.getString("google.idToken") ?: return@AuthenticationButton
+
+                loginViewModel.launchCatching {
+                    loginViewModel.signInWithGoogle(idToken)
+                }
+            }
+             */
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Login con Google
-        AuthenticationButton(
-            modifier = Modifier.fillMaxWidth(0.83F),
-            buttonText = R.string.loginConGoogle,
-            //onRequestResult = { loginViewModel.setLogeado(true) }
-        ) { credential ->
-            CoroutineScope(Dispatchers.Main).launch {
-                loginViewModel.onSignInWithGoogle(credential)
-            }
-        }
-        /*
-        AuthenticationButton(
-            buttonText = R.string.loginConGoogle,
-            modifier = Modifier.fillMaxWidth(0.8f)
-        ) { credential ->
-            val bundle = (credential as? CustomCredential)?.data ?: return@AuthenticationButton
-            val idToken = bundle.getString("google.idToken") ?: return@AuthenticationButton
-
-            loginViewModel.launchCatching {
-                loginViewModel.signInWithGoogle(idToken)
-            }
-        }
-         */
     }
 }
 

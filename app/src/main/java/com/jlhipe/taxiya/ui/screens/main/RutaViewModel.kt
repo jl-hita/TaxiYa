@@ -441,8 +441,10 @@ class RutaViewModel: ViewModel() {
                 selectedRuta.value?.let {
                     FirebaseFirestore.getInstance().collection("rutas")
                         .document(it.id)
-                        .update("posicionConductor",geoPoint,)
+                        .update("posicionConductor",geoPoint)
                         .await()
+
+                    it.posicionConductor = geoPoint
                 }
 
                 //TODO Gestionar AQUI la proximidad a cliente y a destino para sacarlo de la vista
@@ -463,6 +465,8 @@ class RutaViewModel: ViewModel() {
                         .document(it.id)
                         .update("origenGeo",geoPoint,)
                         .await()
+
+                    it.origenGeo = geoPoint
                 }
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al actualizar ubicacion conductor", e)
@@ -744,8 +748,6 @@ class RutaViewModel: ViewModel() {
         }
     }
 
-
-
     //Marca la ruta como cancelada
     fun marcarRutaCancelada(rutaId: String) {
         viewModelScope.launch {
@@ -760,6 +762,13 @@ class RutaViewModel: ViewModel() {
                         )
                     )
                     .await()
+
+                //Cancela la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.cancelada = true
+                    ruta.finalizado = true
+                }
+
                 Log.d("RutaViewModel", "Ruta $rutaId cancelada")
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al cancelar la ruta $rutaId", e)
@@ -805,6 +814,15 @@ class RutaViewModel: ViewModel() {
                             campo, false
                         )
                         .await()
+
+                    //"Elimina" la ruta seleccionada si no es null
+                    _selectedRuta.value?.let { ruta ->
+                        if(esConductor) {
+                            ruta.visibleConductor = false
+                        } else {
+                            ruta.visibleCliente = false
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
@@ -843,6 +861,14 @@ class RutaViewModel: ViewModel() {
                     )
                     .await()
 
+                //Asignamos la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.asignado = true
+                    ruta.conductor = user.id
+                    ruta.duracionConductor = duracion
+                    ruta.duracion = duracionFinal
+                }
+
                 //Obtenemos dibujo ruta conductor -> cliente
                 getDirectionsRouteConductorCliente(rutaId)
 
@@ -867,6 +893,12 @@ class RutaViewModel: ViewModel() {
                         )
                     )
                     .await()
+
+                //Desasignamos la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.asignado = false
+                    ruta.conductor = ""
+                }
 
                 //Borramos dibujo ruta conductor -> cliente
                 borrarDirectionsRouteConductorCliente(rutaId)
@@ -894,6 +926,13 @@ class RutaViewModel: ViewModel() {
                             )
                     )
                     .await()
+
+                //Modificamos la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.haciaCliente = true
+                    ruta.momentoSalida = momentoSalida
+                }
+
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
             }
@@ -901,7 +940,6 @@ class RutaViewModel: ViewModel() {
     }
 
     //Modificamos ID de ruta
-    //Marca la ruta como finalizada
     fun setIdRuta(rutaId: String) {
         viewModelScope.launch {
             try {
@@ -910,6 +948,12 @@ class RutaViewModel: ViewModel() {
                     .document(rutaId)
                     .update("id", rutaId)
                     .await()
+
+                //Modificamos la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.id = rutaId
+                }
+
                 Log.d("RutaViewModel", "Ruta $rutaId id -> $rutaId")
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al modificar id de la ruta", e)

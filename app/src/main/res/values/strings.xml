@@ -103,4 +103,5 @@
     <string name="crearCuenta">Crear cuenta</string>
     <string name="siCancelar">Sí, cancelar</string>
     <string name="noAnular">No, anular</string>
+    <string name="rutaHaSidoCancelada">La ruta ha sido cancelada</string>
 </resources>

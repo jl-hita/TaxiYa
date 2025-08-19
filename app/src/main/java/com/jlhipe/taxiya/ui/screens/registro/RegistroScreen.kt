@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -39,6 +40,7 @@ import com.jlhipe.taxiya.R
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.login.LoginViewModel
 import com.jlhipe.taxiya.ui.theme.BlueRibbon
+import com.jlhipe.taxiya.ui.theme.screens.layout.NonAppScaffold
 
 @Composable
 fun RegistroScreen(
@@ -57,14 +59,12 @@ fun RegistroScreen(
     var esConductor by rememberSaveable { mutableStateOf(false) }
     val error: String by loginViewModel.error.observeAsState(initial = "")
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            //.background(color = PaleFrost)
+    NonAppScaffold(
+        navController = navController,
+        modifier = Modifier.fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        showBack = true,
+        onBackClick = { navController.navigate(Routes.Login) }
     ) {
         //Selecciona entre conductor y usuario
         Text(stringResource(R.string.esConductorPregunta))
@@ -246,4 +246,15 @@ fun RegistroScreen(
             Text(text = stringResource(R.string.volver), fontSize = 16.sp)
         }
     }
+/*
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+    }
+ */
 }

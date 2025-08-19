@@ -12,6 +12,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.jlhipe.taxiya.model.Ruta
 import com.jlhipe.taxiya.navigation.Routes
 import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
+import com.jlhipe.taxiya.ui.theme.screens.layout.NonAppScaffold
 
 @Composable
 fun ListaDeRutas(
