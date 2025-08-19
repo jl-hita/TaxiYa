@@ -540,14 +540,14 @@ fun DetallesRuta(
                                 }
                             }
                         ) {
-                            Text(stringResource(R.string.siEliminar),
+                            Text(stringResource(R.string.siCancelar),
                                 //color = MaterialTheme.colorScheme.error) //"Sí, eliminar"
                                 color = RutaCancelada)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showCancelarDialog = false }) {
-                            Text(stringResource(R.string.cancelar))
+                            Text(stringResource(R.string.noAnular))
                         }
                     }
                 )
@@ -562,22 +562,6 @@ fun DetallesRuta(
                 Button(
                     onClick = {
                         showEliminarDialog = true
-                        /*
-                        //Uso coroutine scope porque si no se puede navegar antes de eliminar y cargar rutas
-                        coroutineScope.launch {
-                            //Eliminar la ruta
-                            rutaViewModel.eliminarRuta(ruta.id, esConductor.value)
-                            delay(100)
-                            //Recargar rutas
-                            //rutaViewModel.loadRutas()
-                            //delay(100)
-                            //Deseleccionar ruta
-                            rutaViewModel.deseleccionarRuta()
-                            //Navego al menú principal
-                            navController.navigate(Routes.Main)
-
-                        }
-                         */
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Purple40)
@@ -590,8 +574,8 @@ fun DetallesRuta(
             if (showEliminarDialog) {
                 AlertDialog(
                     onDismissRequest = { showEliminarDialog = false },
-                    title = { Text(stringResource(R.string.confirmarCancelar)) },
-                    text = { Text(stringResource(R.string.estasSeguroCancelarRuta)) },
+                    title = { Text(stringResource(R.string.confirmarEliminacion)) },
+                    text = { Text(stringResource(R.string.estasSeguroEliminar)) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -618,7 +602,7 @@ fun DetallesRuta(
                     },
                     dismissButton = {
                         TextButton(onClick = { showCancelarDialog = false }) {
-                            Text(stringResource(R.string.cancelar))
+                            Text(stringResource(R.string.noAnular))
                         }
                     }
                 )
@@ -727,6 +711,7 @@ fun DetallesRuta(
              * TODO Plantear cambiar condición de distancia a tiempo
              * TODO plantear llevar comprobación a comprobarSiIniciaDestino()
              */
+            /*
             if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor >= 500) {
                 Spacer(Modifier.height(12.dp))
 
@@ -755,12 +740,14 @@ fun DetallesRuta(
                     )
                 }
             }
+             */
 
             /**
              * Indicar de forma visual que el conductor está llegando a la posición del cliente
              * TODO Plantear cambiar condición de distancia a tiempo
              * TODO plantear llevar comprobación a comprobarSiIniciaDestino()
              */
+            /*
             if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor < 500) {
                 Spacer(Modifier.height(12.dp))
 
@@ -787,6 +774,7 @@ fun DetallesRuta(
                     )
                 }
             }
+             */
 
             /**
              * Botón de marcar que se ha llegado al destino

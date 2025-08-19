@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,6 +61,7 @@ fun MainScreen(
     //val usuario = loginViewModel.user.value
     val user by loginViewModel.user.observeAsState()
     val esConductor = loginViewModel.esConductor.collectAsState()
+    val icono = if(esConductor.value) Icons.Default.PersonSearch else Icons.Default.DirectionsCar
     //var textoBotonAccion: String = ""
 
     AppScaffold(
@@ -76,6 +80,7 @@ fun MainScreen(
         },
         loginViewModel = loginViewModel,
         navController = navController,
+        actionButtonIcon = icono,
         //textoBotonAccion = textoBotonAccion,
     ) {
         val logeado by loginViewModel.logeado.observeAsState(initial = true)

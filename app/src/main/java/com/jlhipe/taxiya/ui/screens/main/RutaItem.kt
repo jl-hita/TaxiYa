@@ -95,7 +95,7 @@ fun RutaItem(
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                 append(stringResource(R.string.distanciaACliente))
                             }
-                            append("%.1f km".format(distancia.toDouble() / 1000))
+                            append(": %.1f km".format(distancia.toDouble() / 1000))
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = colorTexto,

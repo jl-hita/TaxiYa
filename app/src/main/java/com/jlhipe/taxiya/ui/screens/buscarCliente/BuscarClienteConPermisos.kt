@@ -175,7 +175,7 @@ fun BuscarClienteConPermisos(
                 Text(
                     text = stringResource(R.string.noHayRutasEnEsteMomento),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth(0.7F)
+                    modifier = Modifier.fillMaxWidth(0.8F)
                 )
             }
         }

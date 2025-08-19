@@ -96,9 +96,11 @@
     <string name="rutaCancelada">Ruta cancelada</string>
     <string name="buscarCliente">Buscar cliente</string>
     <string name="crearRuta">Crear ruta</string>
-    <string name="noHayRutasEnEsteMomento">No hay rutas en este momento. Si algún cliente pide un taxi aparecerá en esta pantalla. No es necesario que hagas nada: nuestro agente patitas se encarga de todo</string>
+    <string name="noHayRutasEnEsteMomento">No hay rutas en este momento. Si algún cliente pide un taxi aparecerá en esta pantalla. No es necesario que hagas nada: el agente patitas se encarga de todo</string>
     <string name="oops">¡Ups!</string>
     <string name="centrarMapa">Centrar mapa</string>
     <string name="iniciarSesion">Iniciar sesión</string>
     <string name="crearCuenta">Crear cuenta</string>
+    <string name="siCancelar">Sí, cancelar</string>
+    <string name="noAnular">No, anular</string>
 </resources>

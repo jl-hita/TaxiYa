@@ -129,9 +129,11 @@ fun NuevaRutaConPermisos(
         ubicacionActualizada?.firstOrNull()?.let {
             val nuevaUbicacion = LatLng(it.latitude, it.longitude)
             userLocation.value = nuevaUbicacion
+            /*
             cameraPositionState.move(
                 CameraUpdateFactory.newLatLngZoom(nuevaUbicacion, 15f)
             )
+             */
         }
     }
 
@@ -155,9 +157,12 @@ fun NuevaRutaConPermisos(
     LaunchedEffect(destinoActualizado) {
         destinoActualizado?.firstOrNull()?.let {
             destinoLocation.value = LatLng(it.latitude, it.longitude)
+            /*
+             * No interesa ir animando la cámara cuando se cambia la ubicación del usuario
             cameraPositionState.animate(
                 CameraUpdateFactory.newLatLngZoom(destinoLocation.value, 15f)
             )
+             */
         }
     }
 
@@ -187,11 +192,13 @@ fun NuevaRutaConPermisos(
         showActionButton = false,
         botonAccion = {
             // Animar la cámara a la posición del usuario
+            /*
             scope.launch {
                 cameraPositionState.animate(
                     update = CameraUpdateFactory.newLatLngZoom(userLocation.value, 16f)
                 )
             }
+             */
         },
         loginViewModel = loginViewModel,
         navController = navController,

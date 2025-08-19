@@ -1,6 +1,7 @@
 package com.jlhipe.taxiya.ui.theme.screens.layout
 
 import android.content.res.Resources.Theme
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -38,6 +40,7 @@ fun AppScaffold(
     botonAccion: () -> Unit = {},  //Botón de acción (nueva ruta)
     loginViewModel: LoginViewModel,
     navController: NavController,
+    actionButtonIcon: ImageVector = Icons.Filled.Add,
     //textoBotonAccion: String,
     content: @Composable () -> Unit         // Se le pasa el contenido principal mediante parámetro
 ) {
@@ -55,7 +58,7 @@ fun AppScaffold(
                 Button(
                     onClick = botonAccion
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.nuevaRuta))
+                    Icon(actionButtonIcon, contentDescription = "")
                     //Text(textoBotonAccion)
                 }
             }

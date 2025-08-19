@@ -95,6 +95,9 @@ class RutaViewModel: ViewModel() {
     //Job para controlar distancia entre cliente y conductor
     private var distanciaJob: Job? = null
 
+    //Para reintentar una vez si fallamos al obtener polylines
+    private var reintentadoPolylines: Boolean = false
+
     /*
      * Si el usuario no está logeado esto provoca excepción al no tener permisos en Firebase
     init {
@@ -1116,74 +1119,46 @@ class RutaViewModel: ViewModel() {
         var decodedPath: List<LatLng> = emptyList()
 
         return withContext(Dispatchers.IO) {
-            val url =
-                "https://maps.googleapis.com/maps/api/directions/json?" +
+            try {
+                val url = "https://maps.googleapis.com/maps/api/directions/json?" +
                         "origin=${p1.latitude},${p1.longitude}" +
                         "&destination=${p2.latitude},${p2.longitude}" +
                         "&mode=driving&key=$apiKey"
 
-            val request = Request.Builder().url(url).build()
-            client.newCall(request).execute().use { response ->
-                val body = response.body?.string() ?: return@withContext emptyList()
-
-                val json = JSONObject(body)
-                val status = json.getString("status")
-                if (status != "OK") {
-                    Log.e("RutaViewModel", "*** Google Directions API error: $status")
-                    return@withContext emptyList()
-                }
-
-                val routes = json.getJSONArray("routes")
-                if (routes.length() > 0) {
-                    val encoded = routes.getJSONObject(0)
-                        .getJSONObject("overview_polyline")
-                        .getString("points")
-                    return@withContext decodePolyline(encoded)
-                }
-            }
-            emptyList()
-        }
-
-        /*
-        viewModelScope.launch(Dispatchers.IO) {
-            Log.d("RutaViewModel", " *** Obteniendo dibujo de ruta *** ")
-            try {
-                val url =
-                    "https://maps.googleapis.com/maps/api/directions/json?" +
-                            "origin=${p1.latitude},${p1.longitude}" +
-                            "&destination=${p2.latitude},${p2.longitude}" +
-                            "&mode=driving&key=$apiKey"
-
                 val request = Request.Builder().url(url).build()
-                val response = client.newCall(request).execute()
+                client.newCall(request).execute().use { response ->
+                    val body = response.body?.string() ?: return@withContext emptyList()
 
-                val body = response.body?.string()
-                if (body == null) {
-                    Log.e("RutaViewModel", "Respuesta sin body")
-                    return@launch
-                }
+                    val json = JSONObject(body)
+                    val status = json.getString("status")
+                    if (status != "OK") {
+                        Log.e("RutaViewModel", "*** Google Directions API error: $status")
+                        return@withContext emptyList()
+                    }
 
-                val json = JSONObject(body)
-                val status = json.getString("status")
-                if (status != "OK") {
-                    Log.e("RutaViewModel", "*** Google Directions API error: $status")
-                    return@launch
-                }
-
-                val routes = json.getJSONArray("routes")
-                if (routes.length() > 0) {
-                    val overviewPolyline = routes.getJSONObject(0).getJSONObject("overview_polyline")
-                    val encoded = overviewPolyline.getString("points")
-                    decodedPath = decodePolyline(encoded)
+                    val routes = json.getJSONArray("routes")
+                    if (routes.length() > 0) {
+                        val encoded = routes.getJSONObject(0)
+                            .getJSONObject("overview_polyline")
+                            .getString("points")
+                        reintentadoPolylines = false //Reseteamos para volver a reintentar si en el futuro falla
+                        return@withContext decodePolyline(encoded)
+                    } else {
+                        if(reintentadoPolylines) {
+                            reintentadoPolylines = false //Reseteamos para volver a reintentar si en el futuro falla
+                            return@withContext emptyList()
+                        } else {
+                            reintentadoPolylines = true //Marcamos como que hemos reintentado, para no repetir esta petición
+                            delay(1000)
+                            return@withContext getDirectionsRoute(p1, p2) //Reintentamos la primera vez si falla
+                        }
+                    }
                 }
             } catch (e: Exception) {
-                //e.printStackTrace()
-                Log.e("RutaViewModel", "Error obteniendo ruta: ${e.message}", e)
+                Log.e("RutaViewModel", "Error al obtener ruta: ${e.message}", e)
+                return@withContext emptyList()
             }
         }
-        Log.d("RutaViewModel", " *** Resultado -> $decodedPath ")
-        return decodedPath
-         */
     }
 
     //Obtiene la linea de ruta entre conductor y cliente
