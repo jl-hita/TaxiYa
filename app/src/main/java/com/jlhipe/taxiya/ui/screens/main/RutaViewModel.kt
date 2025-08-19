@@ -436,12 +436,12 @@ class RutaViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 _selectedRuta.value?.let {
+                    it.posicionConductor = geoPoint
+
                     FirebaseFirestore.getInstance().collection("rutas")
                         .document(it.id)
                         .update("posicionConductor",geoPoint)
                         .await()
-
-                    it.posicionConductor = geoPoint
                 }
 
                 //TODO Gestionar AQUI la proximidad a cliente y a destino para sacarlo de la vista
@@ -458,12 +458,12 @@ class RutaViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 _selectedRuta.value?.let {
+                    it.origenGeo = geoPoint
+
                     FirebaseFirestore.getInstance().collection("rutas")
                         .document(it.id)
                         .update("origenGeo",geoPoint,)
                         .await()
-
-                    it.origenGeo = geoPoint
                 }
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al actualizar ubicacion conductor", e)
@@ -572,18 +572,18 @@ class RutaViewModel: ViewModel() {
                 val rutas = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Ruta::class.java)?.copy(id = doc.id)
                 }
-                    //Filtrar
-                    .filter { it.cliente != userId }
-                    //Ordenar por distancia al cliente
-                    .sortedBy { ruta ->
-                        val clienteLatLng = LatLng(
-                            ruta.origenGeo.latitude,
-                            ruta.origenGeo.longitude
-                        )
-                        calcularDistancia(userLatLng, clienteLatLng)
-                    }
-                    //Limitar a 5
-                    .take(5)
+                //Filtrar
+                .filter { it.cliente != userId }
+                //Ordenar por distancia al cliente
+                .sortedBy { ruta ->
+                    val clienteLatLng = LatLng(
+                        ruta.origenGeo.latitude,
+                        ruta.origenGeo.longitude
+                    )
+                    calcularDistancia(userLatLng, clienteLatLng)
+                }
+                //Limitar a 5
+                .take(5)
 
                 _rutasBuscandoTaxi.value = rutas
                 _primeraCargaTaxis.value = false
@@ -749,6 +749,12 @@ class RutaViewModel: ViewModel() {
     fun marcarRutaCancelada(rutaId: String) {
         viewModelScope.launch {
             try {
+                //Cancela la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.cancelada = true
+                    ruta.finalizado = true
+                }
+
                 val db = FirebaseFirestore.getInstance()
                 db.collection("rutas")
                     .document(rutaId)
@@ -759,12 +765,6 @@ class RutaViewModel: ViewModel() {
                         )
                     )
                     .await()
-
-                //Cancela la ruta seleccionada si no es null
-                _selectedRuta.value?.let { ruta ->
-                    ruta.cancelada = true
-                    ruta.finalizado = true
-                }
 
                 Log.d("RutaViewModel", "Ruta $rutaId cancelada")
             } catch (e: Exception) {
@@ -793,25 +793,16 @@ class RutaViewModel: ViewModel() {
                 val borrarRuta = doc.exists() && (doc.getBoolean(otroCampo) == false)
 
                 if(borrarRuta) {
+                    //Deselccionamos ruta seleccionada
+                    _selectedRuta.value = null
+
                     //Borramos por completo la ruta de firebase
                     FirebaseFirestore.getInstance()
                         .collection("rutas")
                         .document(rutaId)
                         .delete()
                         .await()
-
-                    //Deselccionamos ruta seleccionada
-                    _selectedRuta.value = null
                 } else {
-                    //Ocultamos la ruta para el usuario que llama la función
-                    FirebaseFirestore.getInstance()
-                        .collection("rutas")
-                        .document(rutaId)
-                        .update(
-                            campo, false
-                        )
-                        .await()
-
                     //"Elimina" la ruta seleccionada si no es null
                     _selectedRuta.value?.let { ruta ->
                         if(esConductor) {
@@ -820,6 +811,15 @@ class RutaViewModel: ViewModel() {
                             ruta.visibleCliente = false
                         }
                     }
+
+                    //Ocultamos la ruta para el usuario que llama la función
+                    FirebaseFirestore.getInstance()
+                        .collection("rutas")
+                        .document(rutaId)
+                        .update(
+                            campo, false
+                        )
+                        .await()
                 }
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
@@ -845,8 +845,15 @@ class RutaViewModel: ViewModel() {
                 //Modificamos ruta.duracion <- sumamos el tiempo que tardará el conductor en llegar
                 val duracionFinal = selectedRuta.value!!.duracion + duracion
 
-                val db = FirebaseFirestore.getInstance()
-                db.collection("rutas")
+                //Asignamos la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.asignado = true
+                    ruta.conductor = user.id
+                    ruta.duracionConductor = duracion
+                    ruta.duracion = duracionFinal
+                }
+
+                FirebaseFirestore.getInstance().collection("rutas")
                     .document(rutaId)
                     .update(
                         mapOf(
@@ -857,14 +864,6 @@ class RutaViewModel: ViewModel() {
                         )
                     )
                     .await()
-
-                //Asignamos la ruta seleccionada si no es null
-                _selectedRuta.value?.let { ruta ->
-                    ruta.asignado = true
-                    ruta.conductor = user.id
-                    ruta.duracionConductor = duracion
-                    ruta.duracion = duracionFinal
-                }
 
                 //Obtenemos dibujo ruta conductor -> cliente
                 getDirectionsRouteConductorCliente(rutaId)
@@ -880,17 +879,6 @@ class RutaViewModel: ViewModel() {
     fun desasignarRuta(rutaId: String) {
         viewModelScope.launch {
             try {
-                val db = FirebaseFirestore.getInstance()
-                db.collection("rutas")
-                    .document(rutaId)
-                    .update(
-                        mapOf(
-                            "conductor" to "",
-                            "asignado" to false
-                        )
-                    )
-                    .await()
-
                 //Desasignamos la ruta seleccionada si no es null
                 _selectedRuta.value?.let { ruta ->
                     ruta.asignado = false
@@ -899,6 +887,16 @@ class RutaViewModel: ViewModel() {
 
                 //Borramos dibujo ruta conductor -> cliente
                 borrarDirectionsRouteConductorCliente(rutaId)
+
+                FirebaseFirestore.getInstance().collection("rutas")
+                    .document(rutaId)
+                    .update(
+                        mapOf(
+                            "conductor" to "",
+                            "asignado" to false
+                        )
+                    )
+                    .await()
 
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
@@ -912,8 +910,13 @@ class RutaViewModel: ViewModel() {
             try {
                 val momentoSalida = System.currentTimeMillis() / 1000
 
-                val db = FirebaseFirestore.getInstance()
-                db.collection("rutas")
+                //Modificamos la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.haciaCliente = true
+                    ruta.momentoSalida = momentoSalida
+                }
+
+                FirebaseFirestore.getInstance().collection("rutas")
                     .document(rutaId)
                     //.update("haciaCliente", true)
                     .update(
@@ -923,12 +926,6 @@ class RutaViewModel: ViewModel() {
                             )
                     )
                     .await()
-
-                //Modificamos la ruta seleccionada si no es null
-                _selectedRuta.value?.let { ruta ->
-                    ruta.haciaCliente = true
-                    ruta.momentoSalida = momentoSalida
-                }
 
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error al eliminar la ruta $rutaId", e)
@@ -940,16 +937,16 @@ class RutaViewModel: ViewModel() {
     fun setIdRuta(rutaId: String) {
         viewModelScope.launch {
             try {
+                //Modificamos la ruta seleccionada si no es null
+                _selectedRuta.value?.let { ruta ->
+                    ruta.id = rutaId
+                }
+
                 val db = FirebaseFirestore.getInstance()
                 db.collection("rutas")
                     .document(rutaId)
                     .update("id", rutaId)
                     .await()
-
-                //Modificamos la ruta seleccionada si no es null
-                _selectedRuta.value?.let { ruta ->
-                    ruta.id = rutaId
-                }
 
                 Log.d("RutaViewModel", "Ruta $rutaId id -> $rutaId")
             } catch (e: Exception) {
@@ -1212,15 +1209,15 @@ class RutaViewModel: ViewModel() {
             //Convertimos a GeoPoint para Firebase
             ruta.polylineCliente = polylineLatLng.map { GeoPoint(it.latitude, it.longitude) }
 
+            //Copiamos a selectedRuta
+            _selectedRuta.postValue(ruta)
+
             if(ruta.polylineCliente.isNotEmpty()) {
                 //Guardamos en firebase
                 FirebaseFirestore.getInstance()
                     .collection("rutas")
                     .document(rutaId)
                     .update("polylineCliente", ruta.polylineCliente)
-
-                //Copiamos a selectedRuta
-                _selectedRuta.postValue(ruta)
             }
         }
     }
@@ -1232,14 +1229,14 @@ class RutaViewModel: ViewModel() {
         viewModelScope.launch {
             ruta.polylineCliente = emptyList()
 
+            //Copiamos a selectedRuta
+            _selectedRuta.postValue(ruta)
+
             //Guardamos en firebase
             FirebaseFirestore.getInstance()
                 .collection("rutas")
                 .document(rutaId)
                 .update("polylineCliente", ruta.polylineCliente)
-
-            //Copiamos a selectedRuta
-            _selectedRuta.postValue(ruta)
         }
     }
 
@@ -1253,15 +1250,15 @@ class RutaViewModel: ViewModel() {
             // Convertimos a GeoPoint para Firebase
             ruta.polylineDestino = polylineLatLng.map { GeoPoint(it.latitude, it.longitude) }
 
+            //Copiamos a selectedRuta
+            _selectedRuta.postValue(ruta)
+
             if(ruta.polylineDestino.isNotEmpty()) {
                 //Guardamos en firebase
                 FirebaseFirestore.getInstance()
                     .collection("rutas")
                     .document(rutaId)
                     .update("polylineDestino", ruta.polylineDestino)
-
-                //Copiamos a selectedRuta
-                _selectedRuta.postValue(ruta)
             }
         }
     }
@@ -1272,14 +1269,14 @@ class RutaViewModel: ViewModel() {
 
         ruta.polylineDestino = emptyList()
 
+        //Copiamos a selectedRuta
+        _selectedRuta.postValue(ruta)
+
         //Guardamos en firebase
         FirebaseFirestore.getInstance()
             .collection("rutas")
             .document(rutaId)
             .update("polylineDestino", ruta.polylineDestino)
-
-        //Copiamos a selectedRuta
-        _selectedRuta.postValue(ruta)
     }
 
     /**

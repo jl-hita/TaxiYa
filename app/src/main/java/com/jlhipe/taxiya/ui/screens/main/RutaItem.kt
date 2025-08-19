@@ -75,10 +75,15 @@ fun RutaItem(
         if(isSystemInDarkTheme())
             Color.Black
         else
-            Color.White
+            Color.Gray
     }
 
-    val colorTexto = if((ruta.finalizado && ruta.cancelada) || !ruta.finalizado) Color.White else Color.Black
+    val colorTexto = if(isSystemInDarkTheme()) {
+        Color.White
+    } else {
+        if((ruta.finalizado && ruta.cancelada) || !ruta.finalizado) Color.White else Color.Black
+    }
+
 
     /*
     val backgroundColor = if (!ruta.finalizado) {
