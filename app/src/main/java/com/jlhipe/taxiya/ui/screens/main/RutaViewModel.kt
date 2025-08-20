@@ -15,6 +15,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -495,6 +496,31 @@ class RutaViewModel: ViewModel() {
 
     //Carga la lista de rutas de Firebase
     suspend fun loadRutasFirebase(userId: String): List<Ruta> {
+        return try {
+            val snapshot = Firebase.firestore
+                .collection("rutas")
+                .orderBy("fechaCreacion", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { document ->
+                val ruta = document.toObject(Ruta::class.java)?.copy(id = document.id)
+
+                if (ruta != null && (ruta.cliente == userId || ruta.conductor == userId)) {
+                    Log.d("LoadRutas", "Agregando ruta ${document.id} -> ${ruta.cliente} / ${ruta.conductor}")
+                    ruta
+                } else {
+                    Log.d("LoadRutas", "Ruta ${document.id} no coincide con userId")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("LoadRutas", "Error cargando rutas", e)
+            emptyList()
+        }
+    }
+    /*
+    suspend fun loadRutasFirebase(userId: String): List<Ruta> {
         //val currentUser = Firebase.auth.currentUser ?: return emptyList()
 
         val db = Firebase.firestore
@@ -548,6 +574,7 @@ class RutaViewModel: ViewModel() {
         Log.d("LoadRutas", "Total rutas cargadas: ${listaRutas.size}")
         return listaRutas
     }
+     */
 
     fun actualizarPuedeVolver(volver: Boolean) {
         //_puedeVolver.postValue(volver)
@@ -652,12 +679,24 @@ class RutaViewModel: ViewModel() {
         //_selectedRuta.value = null
     }
 
+    /*
     fun getRuta(documentId: String): Ruta {
         //val currentUser = Firebase.auth.currentUser ?: return Ruta()
 
         var ruta = Ruta()
 
-        db.collection("rutas").document(documentId).get().addOnSuccessListener { document ->
+        db.collection("rutas").document(documentId)
+            .get()
+            .addOnSuccessListener { document ->
+                ruta = document.toObject(Ruta::class.java)!!
+            }
+            .addOnFailureListener {
+                //ruta = Ruta()
+            }
+
+        /*
+        db.collection("rutas").document(documentId)
+            .get().addOnSuccessListener { document ->
             ruta = Ruta(
                 fechaCreacion = document.get("fechaCreacion") as Long,
                 conductor = document.get("conductor").toString(),
@@ -676,8 +715,23 @@ class RutaViewModel: ViewModel() {
                 finalizado = document.get("finalizado") as Boolean,
             )
         }
+         */
 
         return ruta
+    }
+     */
+
+    suspend fun getRuta(documentId: String): Ruta {
+        return try {
+            val snapshot = db.collection("rutas")
+                .document(documentId)
+                .get()
+                .await()
+
+            snapshot.toObject(Ruta::class.java)!!
+        } catch (e: Exception) {
+            Ruta()
+        }
     }
 
     fun updateRuta(documentId: String, ruta: Ruta) {
@@ -773,6 +827,20 @@ class RutaViewModel: ViewModel() {
         }
     }
 
+    /*
+    //Volver a activar una ruta cancelada
+    fun activarRutaCancelada(ruta: Ruta) {
+        viewModelScope.launch {
+            _selectedRuta.value?.let { ruta ->
+                ruta.cancelada = false
+                ruta.finalizado = false
+                ruta.asignado = false
+                ruta.conductor = ""
+            }
+        }
+    }
+     */
+
     //
     /**
      * Elimina la ruta seleccionada -> Lo que hace es marcarla como no visible para quien la "elimina" pero seguirá en la BBDD
@@ -836,6 +904,8 @@ class RutaViewModel: ViewModel() {
                 //Hacemos que no puedan salir de DetallesRuta
                 actualizarPuedeVolver(false)
 
+                var posicionInicialConductor: GeoPoint = GeoPoint(0.0, 0.0)
+
                 //Calculamos cuanto va a tardar el conductor en llegar al cliente
                 val (distancia, duracion) = getDistanceAndDuration(selectedRuta.value!!.origenGeo, selectedRuta.value!!.destinoGeo, routesApiKey)
                 selectedRuta.value!!.duracionConductor = duracion
@@ -851,6 +921,7 @@ class RutaViewModel: ViewModel() {
                     ruta.conductor = user.id
                     ruta.duracionConductor = duracion
                     ruta.duracion = duracionFinal
+                    ruta.posicionInicialConductor = ruta.posicionConductor
                 }
 
                 FirebaseFirestore.getInstance().collection("rutas")
@@ -860,7 +931,8 @@ class RutaViewModel: ViewModel() {
                             "conductor" to user.id,
                             "asignado" to true,
                             "duracionConductor" to duracion,
-                            "duracion" to duracionFinal
+                            "duracion" to duracionFinal,
+                            "posicionInicialConductor" to selectedRuta.value?.posicionConductor
                         )
                     )
                     .await()
@@ -1107,8 +1179,8 @@ class RutaViewModel: ViewModel() {
         }
     }
 
-    //Decodifica polylines
-    private fun decodePolyline(encoded: String): List<LatLng> {
+    //Pasa de "Encoded Polyline Algorithm" a Lista de puntos LatLng
+    fun decodePolyline(encoded: String): List<LatLng> {
         val poly = ArrayList<LatLng>()
         var index = 0
         val len = encoded.length
@@ -1424,6 +1496,7 @@ class RutaViewModel: ViewModel() {
         return ""
     }
 
+    /*
     //Asigna un conductor a una ruta
     fun setAsignado(documentId: String, conductor: String) {
         var rutaTemp = getRuta(documentId)
@@ -1478,6 +1551,7 @@ class RutaViewModel: ViewModel() {
     fun hayRutaActiva(listaRutas: List<Ruta>): Ruta? {
         return listaRutas.find { !it.finalizado }
     }
+     */
 
     //Borra todas las rutas de firebase
     fun borrarTodasLasRutas() {

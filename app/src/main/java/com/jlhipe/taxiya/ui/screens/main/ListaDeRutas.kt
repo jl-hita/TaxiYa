@@ -28,7 +28,7 @@ fun ListaDeRutas(
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(rutas, key = { it.id }) { ruta ->
             val p1 = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
-            val p2 = LatLng(userLocation?.first()!!.latitude, userLocation?.first()!!.longitude)
+            val p2 = LatLng(userLocation!!.latitude, userLocation!!.longitude)
             val distancia: Long = rutaViewModel.calcularDistancia(p1, p2)
 
             RutaItem(ruta = ruta, distancia, buscaTaxi, onClick = {

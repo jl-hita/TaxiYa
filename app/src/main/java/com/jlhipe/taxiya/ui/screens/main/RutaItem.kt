@@ -56,17 +56,17 @@ fun RutaItem(
         else Color.White
      */
 
-    val backgroundColor = if (ruta.finalizado == false) {
+    val backgroundColor = if (!ruta.finalizado) {
         if(isSystemInDarkTheme())
             RutaEnMarchaClaritoDark
         else
-            RutaEnMarchaClarito
-    } else if (ruta.cancelada == true) {
+            RutaEnMarcha
+    } else if (ruta.cancelada) {
         if(isSystemInDarkTheme())
             RutaCanceladaClaritoDark
         else
-            RutaCanceladaClarito
-    } else if (ruta.enDestino == true) {
+            RutaCancelada
+    } else if (ruta.enDestino) {
         if(isSystemInDarkTheme())
             RutaExitosaDark
         else
@@ -75,13 +75,13 @@ fun RutaItem(
         if(isSystemInDarkTheme())
             Color.Black
         else
-            Color.Gray
+            Color.LightGray
     }
 
     val colorTexto = if(isSystemInDarkTheme()) {
-        Color.White
+        if(ruta.finalizado) Color.Black else Color.White
     } else {
-        if((ruta.finalizado && ruta.cancelada) || !ruta.finalizado) Color.White else Color.Black
+        if(ruta.finalizado) Color.White else Color.Black
     }
 
 

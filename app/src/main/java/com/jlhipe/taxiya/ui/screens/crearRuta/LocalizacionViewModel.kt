@@ -39,8 +39,10 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
     //val ubicacion: LiveData<LatLng> = _ubicacion
 
     //Utilizo un truquillo de hacer una lista de LatLng, ya que no me deja hacerlo directamente con LatLng
-    private val _ubicacion = MutableLiveData<List<LatLng>>()
-    val ubicacion: LiveData<List<LatLng>> = _ubicacion
+    //private val _ubicacion = MutableLiveData<List<LatLng>>()
+    //val ubicacion: LiveData<List<LatLng>> = _ubicacion
+    private val _ubicacion = MutableLiveData<LatLng>()
+    val ubicacion: LiveData<LatLng> = _ubicacion
 
     private val _latitud = MutableLiveData<Double>()
     val latitud: LiveData<Double> = _latitud
@@ -79,7 +81,9 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
             override fun onLocationResult(result: LocationResult) {
                 result.locations.firstOrNull()?.let { location ->
                     val nuevaUbicacion = LatLng(location.latitude, location.longitude)
-                    _ubicacion.postValue(listOf(nuevaUbicacion))
+                    //_ubicacion.postValue(listOf(nuevaUbicacion))
+                    //_ubicacion.postValue(nuevaUbicacion)
+                    _ubicacion.value = nuevaUbicacion
                 }
             }
         }
@@ -96,7 +100,8 @@ class LocalizacionViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun setUbicacion(lat: Double, lon: Double) {
-        _ubicacion.value = listOf(LatLng(lat, lon))
+        //_ubicacion.value = listOf(LatLng(lat, lon))
+        _ubicacion.value = LatLng(lat, lon)
     }
 
     /*

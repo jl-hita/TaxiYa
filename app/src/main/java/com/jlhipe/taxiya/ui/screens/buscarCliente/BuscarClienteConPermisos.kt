@@ -104,7 +104,7 @@ fun BuscarClienteConPermisos(
 
         do {
             //Carga las rutas
-            rutaViewModel.cargarRutasBuscandoTaxi(usuario.id, ubicacion.first())
+            rutaViewModel.cargarRutasBuscandoTaxi(usuario.id, ubicacion)
 
             //Espera 5 segundos antes de la siguiente recarga
             delay(5000)
@@ -118,7 +118,8 @@ fun BuscarClienteConPermisos(
             coroutineScope.launch {
                 navController.navigate(Routes.Main)
             }
-        }
+        },
+        modifier = Modifier.fillMaxSize()
     ) {
         if (rutasBuscandoTaxi != null && rutasBuscandoTaxi!!.isNotEmpty()) {
             ListaDeRutas(

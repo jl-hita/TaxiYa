@@ -2,6 +2,7 @@ package com.jlhipe.taxiya.ui.screens.perfilUsuario
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,6 +45,7 @@ fun PerfilUsuarioScreen(
     NonAppScaffold(
         navController = navController,
         showBack = false,
+        modifier = Modifier.fillMaxSize()
     ) {
         Text(stringResource(R.string.perfilDeUsuario), style = MaterialTheme.typography.headlineSmall)
 

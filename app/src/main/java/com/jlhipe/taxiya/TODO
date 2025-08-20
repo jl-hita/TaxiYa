@@ -43,13 +43,16 @@ SHA256: C6:22:34:F7:70:24:E4:5D:0F:6A:3F:C1:FC:7E:08:A6:60:AC:3B:9D:87:C7:CD:8D:
 //HECHO -> Si falla la generación de polylines, reintentar al menos una vez
 //HECHO -> Cambiar icono floatingAction "+" por texto "crear ruta" o "buscar cliente" <- investigar por qué no funciona o volver a dejar solo icono
 //HECHO -> Alternativa al AppScaffold que use temas para usar como composable alternativo
+//HECHO -> Cambiar icono app
+//HECHO -> Acabar de afinar el tema -> Meterle los colores que uso en la app y buscar versiones (más oscuras) para el modo oscuro
+//HECHO -> Extra -> Al hacer clic en el mapa en DetallesRuta, que se muestre un mapa grande con la ruta dibujada
 
-//TODO Acabar de afinar el tema -> Meterle los colores que uso en la app y buscar versiones (más oscuras) para el modo oscuro
-//TODO Botón de reiniciar ruta cancelada
-//TODO El control de distancias se debe hacer en el viewModel, con la actualización de ubicación. No se debe hacer en el composable
+
+//TODO En NuevaRuta se queda el marker de la posicion inicial 0.0, 0.0
+//TODO Volver a comprobar en el view model estado de la ruta antes de una acción de botón (p.ej. comprobar que ruta siga no asignada antes de asignar)
+//TODO Extra -> Implementar notificaciones para avisar de ruta cancelada, conductor en posicion de cliente, etc
 //TODO Implementar Botón para marcar conductor como activo/inactivo y que al usuario le avise si no hay conductores en un radio de km (Alternativa -> Que mientras esté la app activa el usuario conste como activo en firebase/usuarios)
 //TODO Extra -> Al finalizar ruta, dar al conductor la posibilidad de dirigir a su punto original de antes de aceptar ruta
-//TODO Extra -> Implementar notificaciones para avisar de ruta cancelada, conductor en posicion de cliente, etc
-//TODO Extra -> Al hacer clic en el mapa en DetallesRuta, que se muestre un mapa grande con la ruta dibujada
-//TODO Extra -> Añadir algún tipo de mensagería entre cliente y conductor
 //TODO Revisar formulario de registro -> "Bloque de formulario específico" quizás no sea necesario
+//TODO Extra -> Añadir algún tipo de mensagería entre cliente y conductor
+//TODO El control de distancias se debe hacer en el viewModel, con la actualización de ubicación. No se debe hacer en el composable

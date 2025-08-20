@@ -10,7 +10,7 @@ val RutaDesasignar = Color(0xFFFF8700)
 //val BlueClarito = Color(0xFFBFE6F3)
 val RutaEnMarchaClarito = Color(0xFFBFE6F3)
 //val RojoClarito = Color(0xFFFA9F8E)
-val RutaCanceladaClarito = Color(0xFFFCC5BA)
+val RutaCanceladaClarito = Color(0xFFFF8865)
 //val VerdeClarito = Color(0xFFA6EDA7)
 val RutaExitosaClarito = Color(0xFFA6EDA7)
 

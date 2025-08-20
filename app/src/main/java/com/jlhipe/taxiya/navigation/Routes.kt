@@ -26,4 +26,7 @@ class Routes {
 
     @Serializable
     object BuscarCliente
+
+    @Serializable
+    object MapaRuta
 }

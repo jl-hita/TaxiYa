@@ -2,6 +2,7 @@ package com.jlhipe.taxiya.ui.screens.detallesruta
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -110,6 +112,7 @@ fun DetallesRuta(
     val user by loginViewModel.user.observeAsState()
     val routesApiKey: String = stringResource(R.string.routesAPI)
 
+    /*
     //Cambiamos el color de fondo según estado de la ruta
     val backgroundColor = if (rutaActiva?.finalizado == false) {
         if(isSystemInDarkTheme())
@@ -132,6 +135,7 @@ fun DetallesRuta(
         else
             Color.White
     }
+     */
 
     //Colores para los botones, según modo
     val colorBotonCancelar = if(isSystemInDarkTheme()) RutaCanceladaDark else RutaCancelada
@@ -166,7 +170,7 @@ fun DetallesRuta(
 
     // Cada vez que cambia la ubicación, se actualiza la ubicacion en el objeto ruta
     LaunchedEffect(ubicacionActualizada) {
-        ubicacionActualizada?.firstOrNull()?.let { nuevaUbicacion ->
+        ubicacionActualizada?.let { nuevaUbicacion ->
             if(esConductor.value) {
                 rutaViewModel.cambiaUbicacionConductor(nuevaUbicacion)
                 conductorPos.value = nuevaUbicacion
@@ -208,7 +212,8 @@ fun DetallesRuta(
                     }
                 }
             },
-            modifier = Modifier.background(backgroundColor)
+            //modifier = Modifier.background(backgroundColor).fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             val destinoPos = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude)
 
@@ -359,7 +364,10 @@ fun DetallesRuta(
                 ) {
                     GoogleMap(
                         modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraPositionState
+                        cameraPositionState = cameraPositionState,
+                        onMapClick = {
+                            if(!esConductor.value || (esConductor.value && ruta.asignado && ruta.conductor == user?.id))
+                                navController.navigate(Routes.MapaRuta) } //Navegamos a mapa detalle
                     ) {
                         //Marcadores de cliente, conductor y destino
                         Marker(
@@ -376,6 +384,7 @@ fun DetallesRuta(
                             position = destinoPos,
                             title = stringResource(R.string.destino),
                             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                            //icon = Icons.Default.DirectionsCar
                         )
                         //Listas de lineas para dibujar las rutas de conductor a cliente y de cliente a destino
                         //Polyline conductor -> cliente
@@ -393,7 +402,7 @@ fun DetallesRuta(
                             val puntos = ruta.polylineDestino.map { LatLng(it.latitude, it.longitude) }
                             Polyline(
                                 points = puntos,
-                                color = Color.Blue,
+                                color = Color.Green,
                                 width = 10f
                             )
                         }
@@ -558,6 +567,18 @@ fun DetallesRuta(
                 }
             }
 
+            /**
+             * Botón de re activar una ruta cancelada
+             */
+            /*
+            if(!esConductor.value && ruta.cancelada) {
+                Spacer(Modifier.height(12.dp))
+
+                Button(
+
+                )
+            }
+             */
 
             /**
              * Botón de cancelar ruta
@@ -605,6 +626,23 @@ fun DetallesRuta(
                         }
                     }
                 )
+            }
+
+            /**
+             * Botón para ver el mapa
+             */
+            if(ruta.finalizado) {
+                Spacer(Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        navController.navigate(Routes.MapaRuta)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ) {
+                    Text(stringResource(R.string.verMapa))
+                }
             }
 
             /**
@@ -778,7 +816,7 @@ fun DetallesRuta(
             /**
              * Botón para volver a MainScreen
              */
-            if(ruta.finalizado) {
+            if(ruta.finalizado || (esConductor.value && !ruta.asignado)) {
                 Spacer(Modifier.height(12.dp))
 
                 Button(
@@ -798,605 +836,4 @@ fun DetallesRuta(
             }
         }
     }
-
-
-
-    /*
-    rutaActiva?.let { ruta ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            val destinoPos = LatLng(ruta.destinoGeo.latitude, ruta.destinoGeo.longitude)
-
-            CabezalAlt(
-                showBack = rutaViewModel.puedeVolver ||
-                        ((user!!.id == rutaActiva!!.conductor || user!!.id == rutaActiva!!.cliente) && rutaActiva!!.finalizado),
-                onBackClick = {
-                    rutaViewModel.deseleccionarRuta()
-                    if (rutaActiva!!.finalizado) {
-                        navController.navigate(Routes.Main)
-                    } else {
-                        navController.popBackStack()
-                    }
-                }
-            )
-
-            var textoTitulo = when {
-                ruta.finalizado -> stringResource(R.string.trayectoFinalizado)
-                ruta.cancelada -> stringResource(R.string.rutaCancelada)
-                ruta.haciaDestino -> stringResource(R.string.enRutaHaciaElDestino)
-                ruta.haciaCliente -> stringResource(R.string.taxiEnCaminoHaciaElCliente)
-                ruta.asignado -> stringResource(R.string.rutaAsignadaATaxista)
-                ruta.enDestino -> stringResource(R.string.detallesDeRuta)
-                else -> stringResource(R.string.buscandoTaxi)
-            }
-
-            Text(
-                text = textoTitulo,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    RutaInfoItem(stringResource(R.string.origen), ruta.origen)
-                    RutaInfoItem(stringResource(R.string.destino), ruta.destino)
-
-                    if (ruta.finalizado) {
-                        ruta.momentoSalida?.let {
-                            RutaInfoItem(
-                                stringResource(R.string.salida),
-                                formatoFecha.format(Date(it * 1000))
-                            )
-                        }
-                    }
-
-                    //Si el usuario es conductor se muestra el nombre del cliente
-                    if(esConductor.value) {
-                        LaunchedEffect(ruta.cliente) {
-                            cliente = loginViewModel.getNombreUser(ruta.cliente)
-                        }
-
-                        RutaInfoItem(
-                            stringResource(R.string.cliente),
-                            cliente ?: "Sin Nombre"
-                        )
-                    }
-
-                    //Si el usuario es cliente se muestra el nombre del conductor
-                    if (!esConductor.value && ruta.asignado && !ruta.conductor.isNullOrBlank()) {
-                        var conductor by remember { mutableStateOf<String?>(null) }
-
-                        LaunchedEffect(ruta.conductor) {
-                            conductor = loginViewModel.getNombreUser(ruta.conductor!!)
-                        }
-
-                        RutaInfoItem(
-                            stringResource(R.string.conductor),
-                            conductor ?: "Sin Nombre"
-                        )
-                    }
-
-                    /**
-                     * Si la ruta ha terminado se muestra la hora de llegada
-                     * Si el conductor va hacia el cliente o hacia el destino se muestra un cálculo del tiempo total (conductor->cliente + trayecto a destino)
-                     */
-                    if (ruta.finalizado && ruta.momentoLlegada != null) {
-                        RutaInfoItem(
-                            stringResource(R.string.llegada),
-                            formatoFecha.format(Date(ruta.momentoLlegada!! * 1000))
-                        )
-                    //} else if (ruta.haciaDestino && ruta.momentoSalida != null && ruta.duracion != null) {
-                    } else if(ruta.haciaCliente) {
-                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracionConductor.toLong() + ruta.duracion.toLong()) * 1000)
-                        RutaInfoItem(
-                            stringResource(R.string.horaEstimadaLlegada),
-                            formatoFecha.format(estimada)
-                        )
-                    } else if(ruta.haciaDestino) {
-                        val estimada = Date(((System.currentTimeMillis() / 1000) + ruta.duracion.toLong()) * 1000)
-                        RutaInfoItem(
-                            stringResource(R.string.horaEstimadaLlegada),
-                            formatoFecha.format(estimada)
-                        )
-                    }
-
-                    //Duración y Distancia en la misma fila
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        ruta.duracion?.let {
-                            RutaInfoItem(
-                                stringResource(R.string.duracion),
-                                rutaViewModel.formatDuration(it.toInt()),
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        RutaInfoItem(
-                            stringResource(R.string.distancia),
-                            "%.1f km".format(ruta.distanciaOriginal.toDouble() / 1000),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            //Mostrar mapa si asignado y va hacia cliente o destino
-            if ((!esConductor.value && !ruta.finalizado && ruta.asignado && (ruta.haciaCliente || ruta.haciaDestino))
-                || (esConductor.value && ruta.conductor == user!!.id && !ruta.finalizado && ruta.asignado)) {
-                Spacer(Modifier.height(12.dp))
-
-                //val clientePos = LatLng(ruta.origenGeo.latitude, ruta.origenGeo.longitude)
-                //val conductorPos = LatLng(ruta.posicionConductor.latitude, ruta.posicionConductor.longitude)
-                val cameraPositionState = rememberCameraPositionState()
-
-                // Ajustar cámara para que se vean ambos puntos
-                LaunchedEffect(clientePos, conductorPos) {
-                    val bounds = LatLngBounds.builder()
-                        .include(clientePos.value)
-                        .include(conductorPos.value)
-                        .include(destinoPos)
-                        .build()
-                    cameraPositionState.animate(
-                        update = CameraUpdateFactory.newLatLngBounds(bounds, 100)
-                    )
-                }
-
-                val titleCliente = if (esConductor.value) {
-                    stringResource(R.string.cliente)
-                } else {
-                    stringResource(R.string.tu)
-                }
-
-                val titleConductor = if (esConductor.value) {
-                    stringResource(R.string.tu)
-                } else {
-                    stringResource(R.string.conductor)
-                }
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    GoogleMap(
-                        modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraPositionState
-                    ) {
-                        //Marcadores de cliente, conductor y destino
-                        Marker(
-                            position = clientePos.value,
-                            title = titleCliente,
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-                        )
-                        Marker(
-                            position = conductorPos.value,
-                            title = titleConductor,
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-                        )
-                        Marker(
-                            position = destinoPos,
-                            title = stringResource(R.string.destino),
-                            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-                        )
-                        //Listas de lineas para dibujar las rutas de conductor a cliente y de cliente a destino
-                        //Polyline conductor -> cliente
-                        if(esConductor.value && ruta.polylineCliente.isNotEmpty()) {
-                            val puntos = ruta.polylineCliente.map { LatLng(it.latitude, it.longitude) }
-                            Polyline(
-                                points = puntos,
-                                color = Color.Blue,
-                                width = 10f
-                            )
-                        }
-
-                        //Polyline cliente -> destino
-                        if(ruta.polylineDestino.isNotEmpty()) {
-                            val puntos = ruta.polylineDestino.map { LatLng(it.latitude, it.longitude) }
-                            Polyline(
-                                points = puntos,
-                                color = Color.Blue,
-                                width = 10f
-                            )
-                        }
-                    }
-                }
-
-                if ((!esConductor.value && !ruta.finalizado && ruta.haciaCliente && !ruta.haciaDestino) ||
-                    (esConductor.value && ruta.asignado && ruta.conductor == user!!.id && !ruta.finalizado && ruta.haciaCliente && !ruta.haciaDestino)) {
-                    Spacer(Modifier.height(12.dp))
-
-                    val mensajeDistanciaConductorCliente = if(esConductor.value) stringResource(R.string.distanciaHastaCliente) else stringResource(R.string.conductorEstaA)
-                    val mensajeTiempoConductorCliente = if(esConductor.value) stringResource(R.string.tiempoEstimado) else stringResource(R.string.llegaraEn)
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(
-                                text = mensajeDistanciaConductorCliente+": %.1f km".format(ruta.distanciaConductor / 1000f),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = mensajeTiempoConductorCliente+": ${rutaViewModel.formatDuration(ruta.duracionConductor)}",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-                }
-            }
-
-            /**
-             * Botón de cancelar ruta
-             * La podrá cancelar el cliente cuando no esté finalizada && no haciaCliente no haciaDestino
-             * La podrá cancelar el conductor cuando la tenga asignada y no haya finalizado && (haciaCliente || haciaDestino)
-             */
-            //if ((!esConductor.value && !ruta.finalizado && !ruta.haciaCliente && !ruta.haciaDestino) ||
-            if ((!esConductor.value && !ruta.finalizado) ||
-                (esConductor.value && ruta.asignado && ruta.conductor == user!!.id && !ruta.finalizado && (ruta.haciaCliente || ruta.haciaDestino))) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = { showCancelarDialog = true },
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaCancelada),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.cancelarRuta), color = Color.White)
-                }
-            }
-
-            // Diálogo de confirmación
-            if (showCancelarDialog) {
-                AlertDialog(
-                    onDismissRequest = { showCancelarDialog = false },
-                    title = { Text(stringResource(R.string.confirmarCancelar)) },
-                    text = { Text(stringResource(R.string.estasSeguroCancelarRuta)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showCancelarDialog = false
-                                Log.d("DetallesRuta", "Finalizando ruta $ruta")
-                                coroutineScope.launch {
-                                    rutaViewModel.marcarRutaCancelada(ruta.id)
-                                }
-                            }
-                        ) {
-                            Text(stringResource(R.string.siCancelar),
-                                color = RutaCancelada)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showCancelarDialog = false }) {
-                            Text(stringResource(R.string.noAnular))
-                        }
-                    }
-                )
-            }
-
-            /**
-             * Botón de eliminar ruta
-             */
-            if(ruta.finalizado) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        showEliminarDialog = true
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple40)
-                ) {
-                    Text(stringResource(R.string.eliminarRuta))
-                }
-            }
-
-            // Diálogo de confirmación
-            if (showEliminarDialog) {
-                AlertDialog(
-                    onDismissRequest = { showEliminarDialog = false },
-                    title = { Text(stringResource(R.string.confirmarEliminacion)) },
-                    text = { Text(stringResource(R.string.estasSeguroEliminar)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showEliminarDialog = false
-                                //Uso coroutine scope porque si no se puede navegar antes de eliminar y cargar rutas
-                                coroutineScope.launch {
-                                    //Eliminar la ruta
-                                    rutaViewModel.eliminarRuta(ruta.id, esConductor.value)
-                                    delay(100)
-                                    //Recargar rutas
-                                    //rutaViewModel.loadRutas()
-                                    //delay(100)
-                                    //Deseleccionar ruta
-                                    rutaViewModel.deseleccionarRuta()
-                                    //Navego al menú principal
-                                    navController.navigate(Routes.Main)
-                                }
-                            }
-                        ) {
-                            Text(stringResource(R.string.siEliminar),
-                                //color = MaterialTheme.colorScheme.error) //"Sí, eliminar"
-                                color = RutaCancelada)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showCancelarDialog = false }) {
-                            Text(stringResource(R.string.noAnular))
-                        }
-                    }
-                )
-            }
-
-            /**
-             * Botón de aceptar ruta (asignar)
-             */
-            if(esConductor.value && !ruta.finalizado && !ruta.asignado) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        Log.d("DetallesRuta", "Asignando ruta $ruta")
-                        //Calculamos el tiempo que tardará en llegar el conductor al cliente y editar ruta.duracionConductor
-                        //Asignamos la ruta al conductor
-                        user?.let { rutaViewModel.asignarRuta(ruta.id, it, routesApiKey) }
-                        //TODO mandar notificación al cliente
-                        //rutaViewModel.loadRutas()
-                        //navController.navigate(Routes.Main)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaEnMarcha),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
-                ) {
-                    Text(stringResource(R.string.aceptarCliente)) //TODO quizás cambiar texto a blanco o a negro
-                }
-            }
-
-            /**
-             * Botón de desasignar ruta
-             */
-            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaCliente && !ruta.haciaDestino) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        Log.d("DetallesRuta", "Desasignando ruta $ruta")
-                        rutaViewModel.desasignarRuta(ruta.id)
-                        //rutaViewModel.loadRutas()
-                        //navController.navigate(Routes.Main)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaDesasignar),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
-                ) {
-                    Text(stringResource(R.string.rechazarRuta))
-                }
-            }
-
-            /**
-             * Botón de iniciar ruta hacia cliente
-             */
-            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && !ruta.haciaCliente) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        Log.d("DetallesRuta", "Iniciando ruta $ruta")
-                        coroutineScope.launch {
-                            rutaViewModel.iniciarRutaHaciaCliente(ruta.id)
-                            //Una vez el conductor se dirige hacia el cliente se controla la distancia entre conductor y cliente
-                            rutaViewModel.startTrackingDistancia()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaEnMarcha),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
-                ) {
-                    Text(stringResource(R.string.iniciarRuta))
-                }
-            }
-
-            /**
-             * Botón de ir hacia destino
-             */
-            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && !ruta.haciaDestino && ruta.haciaCliente) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        Log.d("DetallesRuta", "Iniciando ruta $ruta")
-                        coroutineScope.launch {
-                            //Se controla la distancia entre conductor y destino
-                            rutaViewModel.iniciarRutaHaciaDestino()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    colors = ButtonDefaults.buttonColors(containerColor = BlueRibbon),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
-                ) {
-                    Text(stringResource(R.string.iniciarRutaHaciaDestino), color = Color.White)
-                }
-            }
-
-            /**
-             * Indicamos de forma visual que el conductor se dirige hacia el cliente y tiempo aproximado (ruta.duracionConductor)
-             * TODO Plantear cambiar condición de distancia a tiempo
-             * TODO plantear llevar comprobación a comprobarSiIniciaDestino()
-             */
-            /*
-            if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor >= 500) {
-                Spacer(Modifier.height(12.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DirectionsBus, //un cochecito
-                        contentDescription = stringResource(R.string.conductorEnCamino), //"Conductor en camino",
-                        tint = Color(0xFF4CAF50), // verde
-                        modifier = Modifier.size(32.dp)
-                    )
-
-                    Spacer(Modifier.width(8.dp))
-
-                    val texto = if(esConductor.value) {
-                        stringResource(R.string.conductorLejosCliente)
-                    } else {
-                        stringResource(R.string.clienteLejosConductor)
-                    }
-                    Text(
-                        text = texto + " · " +
-                                "${ruta.duracionConductor / 60}" + stringResource(R.string.minAprox),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            }
-             */
-
-            /**
-             * Indicar de forma visual que el conductor está llegando a la posición del cliente
-             * TODO Plantear cambiar condición de distancia a tiempo
-             * TODO plantear llevar comprobación a comprobarSiIniciaDestino()
-             */
-            /*
-            if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && !ruta.finalizado && ruta.asignado && ruta.haciaCliente && !ruta.haciaDestino && ruta.distanciaConductor < 500) {
-                Spacer(Modifier.height(12.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn, // icono de llegada
-                        contentDescription = stringResource(R.string.conductorLlegando),
-                        tint = Color(0xFFFF9800), // naranja
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-
-                    val texto = if(esConductor.value) {
-                        stringResource(R.string.llegandoACliente)
-                    } else {
-                        stringResource(R.string.conductorLlegando)
-                    }
-                    Text(
-                        text = texto,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            }
-             */
-
-            /**
-             * Botón de marcar que se ha llegado al destino
-             */
-            if(esConductor.value && !ruta.finalizado && ruta.asignado && ruta.conductor == user!!.id && ruta.haciaDestino && !ruta.enDestino) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        Log.d("DetallesRuta", "Llegando a destino")
-                        //localizacionViewModel.stopLocationUpdates()
-                        coroutineScope.launch {
-                            rutaViewModel.comprobarSiLlegaADestino(forzar = true)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    //colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
-                    colors = ButtonDefaults.buttonColors(containerColor = RutaExitosa),
-                    //enabled = ruta.finalizado == false && ruta.asignado == false //Una vez se asigna la ruta ya no se puede cancelar
-                    //enabled = ruta.finalizado == false
-                ) {
-                    Text(stringResource(R.string.heLlegadoAlDestino), color = Color.Black)
-                }
-            }
-
-            /**
-             * El conductor ha llegado al destino
-             *
-             * TODO check -> Otro if que controle que el conductor ha llegado a destino con la variable ruta.distanciaDestino < 50
-             * TODO El conductor debe:
-             *  - check -> Indicar de forma visual que el conductor/cliente ha llegado al destino <- El cliente debe tener su propio Text
-             *  - check -> Marcar la ruta como finalizada, no cancelada
-             *  - check -> Marcar ruta.finalizado = true
-             *  - check -> Marcar ruta.cancelado = false
-             *  - check -> Editar ruta.momentoLlegada
-             *  - check -> Editar ruta.duracion
-             *  - check -> ¿Detener el tracking de ubicación del cliente?
-             *  - check -> Cambiar el color de fondo de la pantalla a verde o azul claro
-             *  - check -> Mostrar botón para volver a MainScreen
-             */
-            //if(ruta.finalizado && ruta.asignado && ruta.distanciaDestino < 50) {
-            if((ruta.cliente == user!!.id || ruta.conductor == user!!.id) && ruta.finalizado && !ruta.cancelada && ruta.asignado && ruta.enDestino) {
-                Spacer(Modifier.height(12.dp))
-
-                //Indicar de forma visual que el conductor/cliente ha llegado al destino
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn, // icono de llegada
-                        contentDescription = stringResource(R.string.hasLlegadoADestino),
-                        tint = Color(0xFFFF9800), // naranja
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.hasLlegadoADestino),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-
-                //Se detiene el tracking de ubicación
-                LaunchedEffect(true) {
-                    localizacionViewModel.stopLocationUpdates()
-                }
-            }
-
-            /**
-             * Botón para volver a MainScreen
-             */
-            if(ruta.finalizado) {
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            //rutaViewModel.loadRutas()
-                            rutaViewModel.deseleccionarRuta()
-                            navController.navigate(Routes.Main)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text(stringResource(R.string.salir))
-                }
-            }
-        }
-    }
-     */
 }

@@ -3,7 +3,9 @@ package com.jlhipe.taxiya.ui.theme.screens.layout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,18 +21,20 @@ fun NonAppScaffold(
     navController: NavController,
     showBack: Boolean = false,
     onBackClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,// = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        //color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                //.padding(16.dp)
         ) {
+            Spacer(Modifier.height(20.dp))
+
             CabezalAlt(
                 showBack = showBack,
                 onBackClick = {
@@ -46,8 +50,8 @@ fun NonAppScaffold(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                    .fillMaxSize(),
+                    //.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 //verticalArrangement = Arrangement.Center,
                 content = content

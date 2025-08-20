@@ -22,6 +22,7 @@ data class Ruta(
     var momentoLlegada: Long? = 1,
     //var precio: Number = 0, //Precio en céntimos de euro
     var posicionConductor: GeoPoint = GeoPoint(0.0, 0.0), //Situacion espacial del conductor
+    var posicionInicialConductor: GeoPoint = GeoPoint(0.0, 0.0), //Situacion espacial del conductor
     //var distanciaConductor: Long = 100000, //Distancia en linea recta en metros del conductor respecto del cliente
     //var distanciaDestino: Long = 100000, //Distancia en linea recta al destino, para controlar cuando llegue a destino
     var duracionConductor: Int = 0, //Distancia en tiempo del conductor respecto del cliente

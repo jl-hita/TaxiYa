@@ -104,4 +104,8 @@
     <string name="siCancelar">Sí, cancelar</string>
     <string name="noAnular">No, anular</string>
     <string name="rutaHaSidoCancelada">La ruta ha sido cancelada</string>
+    <string name="inicio">Inicio</string>
+    <string name="origenConductor">Origen conductor</string>
+    <string name="centrarEnMiPosicion">Centrar en mi posición</string>
+    <string name="verMapa">Ver mapa</string>
 </resources>

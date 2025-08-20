@@ -126,7 +126,7 @@ fun NuevaRutaConPermisos(
 
     // Actualiza userLocation cuando el ViewModel tenga valor
     LaunchedEffect(ubicacionActualizada) {
-        ubicacionActualizada?.firstOrNull()?.let {
+        ubicacionActualizada?.let {
             val nuevaUbicacion = LatLng(it.latitude, it.longitude)
             userLocation.value = nuevaUbicacion
             /*

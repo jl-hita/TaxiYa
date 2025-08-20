@@ -18,6 +18,7 @@ import com.jlhipe.taxiya.ui.screens.main.MainScreen
 import com.jlhipe.taxiya.ui.screens.main.RutaViewModel
 import com.jlhipe.taxiya.ui.screens.crearRuta.LocalizacionViewModel
 import com.jlhipe.taxiya.ui.screens.detallesruta.DetallesRuta
+import com.jlhipe.taxiya.ui.screens.detallesruta.MapaRuta
 import com.jlhipe.taxiya.ui.screens.perfilUsuario.PerfilUsuarioScreen
 import com.jlhipe.taxiya.ui.screens.registro.RegistroScreen
 
@@ -124,15 +125,8 @@ fun Navigation(
             BuscarClientePre(navController, loginViewModel, rutaViewModel, localizacionViewModel)
         }
 
-        /*
-        composable<Routes.BookInfo> {
-            BookInfoScreen(
-                onBackArrowClick = {
-                    navController.popBackStack()
-                },
-                rutaViewModel = RutaViewModel
-            )
+        composable<Routes.MapaRuta> {
+            MapaRuta(navController, loginViewModel, rutaViewModel, localizacionViewModel)
         }
-        */
     }
 }
